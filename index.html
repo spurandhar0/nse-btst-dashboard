@@ -353,7 +353,7 @@ tbody td{padding:9px 10px;font-size:12.5px;}
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;">
     <input type="text" id="thSearch" placeholder="Search stock..." oninput="renderTradeHistory()" style="width:190px;">
     <select id="thStatusFilter" onchange="renderTradeHistory()" style="min-width:120px;">
-      <option value="all">All Status</option><option value="open">Open</option><option value="closed">Closed</option>
+      <option value="all">All Status</option><option value="hold">Holding</option><option value="sold">Sold</option>
     </select>
   </div>
   <div id="tradeHistorySummary" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
@@ -989,7 +989,7 @@ function switchTab(name){
     if(name==='marketData')renderMarketData();
 }
 
-els.dlGroup.addEventListener('change',()=>{renderDailyLedger();renderOverview()});
+// onchange handler already set inline on dlGroupSelect element
 
 /* PART 4: BADGE RENDERING */
 
