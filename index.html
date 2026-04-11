@@ -461,23 +461,23 @@ tbody td{padding:9px 10px;font-size:12.5px;}
   <div class="pager" id="mdPager"></div>
 </div>
 
-<div id="stockDetailView" style="display:none;">
-  <div id="sdCard">
+</div><!-- /container -->
+
+<div id="stockDetailView" style="display:none;max-width:1100px;margin:0 auto;padding:20px;">
+  <div id="sdCard" style="background:var(--surface);border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div id="sdHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;">
       <div>
         <h3 id="sdTitle" style="margin:0;color:var(--navy);font-size:17px;font-weight:800;"></h3>
         <div id="sdSubtitle" style="font-size:12px;color:var(--text3);margin-top:4px;"></div>
       </div>
       <div id="sdExportButtons" style="display:flex;gap:7px;"></div>
-      <button onclick="closeStockDetail()" style="background:#64748b;padding:6px 13px;font-size:12px;">✕ Close</button>
+      <button onclick="closeStockDetail()" style="background:#64748b;padding:6px 13px;font-size:12px;color:#fff;border:none;border-radius:6px;cursor:pointer;">✕ Close</button>
     </div>
     <div id="sdBadges" style="margin-bottom:14px;"></div>
     <div id="sdPager" style="margin-bottom:10px;"></div>
     <div id="sdTableBody"></div>
   </div>
 </div>
-
-</div><!-- /container -->
 
 <footer>
   <span>PS Market</span> — BTST Trading Dashboard &nbsp;|&nbsp; Educational Purpose Only &nbsp;|&nbsp; Not SEBI Registered
