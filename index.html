@@ -158,40 +158,9 @@ select:focus,input:focus{border-color:var(--blue2);outline:none;box-shadow:0 0 0
 footer{text-align:center;padding:16px 24px;margin-top:16px;background:var(--navy);color:rgba(255,255,255,.5);font-size:12px;border-top:2px solid rgba(255,255,255,.08);}
 footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
-/* PROFESSIONAL ALIGNMENT & SPACING */
-.card{padding:22px 24px;margin-bottom:18px;}
-.card h2,.card h3{margin-bottom:16px;}
-.badges{margin-bottom:16px;}
-.table-area{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-table{margin:0;}
-thead th{padding:11px 10px;font-size:12px;letter-spacing:.4px;}
-tbody td{padding:9px 10px;font-size:12.5px;}
-.pager{margin-top:14px;padding:10px 0;border-top:1px solid var(--border);}
-.stat-grid{margin-bottom:20px;}
-.stat-card{padding:16px 18px;}
-.stat-val{font-size:26px;}
-.cstrip{padding:14px 20px;margin-bottom:16px;}
-.chart-box{margin-top:20px;padding:18px;}
-
-/* UNIFORM TAB PANELS */
-#calls,#ledger,#holding,#closed,#daily,#tradeHistory,#performance,#forceExit,#stockHistory,#marketData,#avgTrigger,#sellTrigger,#avgHistory,#disclaimer{padding:24px;}
-
-/* SEARCH INPUT STYLING */
-#globalSearch,#thSearch,#shSearch,#mdSearch{transition:all .2s;}
-#globalSearch:focus,#thSearch:focus,#shSearch:focus,#mdSearch:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(37,99,235,.15);}
-
-/* EXPORT BUTTONS UNIFORM */
-.export button,.perf-export-section button{font-size:12px;padding:7px 14px;}
-
-/* EMPTY STATE */
-.empty{padding:48px 20px;font-size:15px;color:var(--text3);background:var(--surface2);border-radius:var(--radius);text-align:center;}
-
 @media(max-width:768px){
   .hdr{padding:9px 12px;gap:8px;}.hdr-logo{height:34px;}.hdr-title .t1{font-size:14px;}
   .container{padding:10px 12px;}.tabs{gap:4px;padding:8px;}.tab{padding:6px 10px;font-size:12px;}
-  #globalSearch{width:180px!important;}
-  .card{padding:14px 12px;}
-  #calls,#ledger,#holding,#closed,#daily,#tradeHistory,#performance,#forceExit,#stockHistory,#marketData,#avgTrigger,#sellTrigger,#avgHistory,#disclaimer{padding:14px 12px;}
 }
 </style>
 </head>
@@ -233,20 +202,11 @@ tbody td{padding:9px 10px;font-size:12.5px;}
   <button onclick="applyDateRange()" style="padding:6px 13px;font-size:12px;">Apply</button>
   <button onclick="resetDateRange()" style="padding:6px 13px;font-size:12px;background:#64748b;">Reset</button>
   <span id="filterPill" class="pill" style="display:none;margin-left:4px;"></span>
-  <div id="topToolbar" class="export hidden" style="margin-left:auto;gap:6px;">
+  <div id="dlGroup" class="export hidden" style="margin-left:auto;gap:6px;">
     <button onclick="autoLoadFromGitHubPages()" style="padding:6px 13px;font-size:12px;background:#0891b2;">↻ Refresh</button>
-    <button onclick="exportExcel()" style="padding:6px 13px;font-size:12px;">Export Excel</button>
-    <button onclick="exportCSVData()" style="padding:6px 13px;font-size:12px;background:#059669;">Export CSV</button>
+    <button onclick="exportAll()" style="padding:6px 13px;font-size:12px;">Export Excel</button>
+    <button onclick="exportCSV()" style="padding:6px 13px;font-size:12px;background:#059669;">Export CSV</button>
   </div>
-</div>
-
-<!-- GLOBAL SEARCH BAR -->
-<div id="globalSearchBox" class="cstrip hidden" style="background:linear-gradient(135deg,#f0f9ff,#eff6ff);border-color:#93c5fd;">
-  <span class="slbl" style="color:var(--blue2);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search:</span>
-  <input type="text" id="globalSearch" placeholder="Search stock name across all tabs..." oninput="onGlobalSearch()" style="width:280px;border-color:#93c5fd;">
-  <span id="globalSearchPill" class="pill" style="display:none;font-size:11px;"></span>
-  <button onclick="clearGlobalSearch()" style="padding:5px 12px;font-size:11px;background:#64748b;">Clear</button>
-  <div id="globalSearchResults" style="display:none;margin-left:auto;font-size:12px;font-weight:700;color:var(--blue2);"></div>
 </div>
 
 <div id="loading" class="card hidden" style="text-align:center;padding:28px;">
@@ -320,40 +280,17 @@ tbody td{padding:9px 10px;font-size:12.5px;}
   <div class="pager" id="closedPager"></div>
 </div>
 
-<div id="avgTrigger" class="card hidden">
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;">
-    <input type="text" id="avgTriggerSearch" placeholder="Search stock..." oninput="renderAvgBuyTrigger()" style="width:190px;">
-  </div>
-  <div class="badges" id="avgTriggerBadges"></div><div class="table-area" id="avgTriggerTable"></div><div class="pager" id="avgTriggerPager"></div>
-</div>
-<div id="sellTrigger" class="card hidden">
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;">
-    <input type="text" id="sellTriggerSearch" placeholder="Search stock..." oninput="renderSellTrigger()" style="width:190px;">
-  </div>
-  <div class="badges" id="sellTriggerBadges"></div><div class="table-area" id="sellTriggerTable"></div><div class="pager" id="sellTriggerPager"></div>
-</div>
-<div id="avgHistory" class="card hidden">
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;">
-    <input type="text" id="avgHistorySearch" placeholder="Search stock..." oninput="renderAvgHistory()" style="width:190px;">
-  </div>
-  <div class="badges" id="avgHistoryBadges"></div><div class="table-area" id="avgHistoryTable"></div><div class="pager" id="avgHistoryPager"></div>
-</div>
+<div id="avgTrigger" class="card hidden"><div class="badges" id="avgTriggerBadges"></div><div class="table-area" id="avgTriggerTable"></div><div class="pager" id="avgTriggerPager"></div></div>
+<div id="sellTrigger" class="card hidden"><div class="badges" id="sellTriggerBadges"></div><div class="table-area" id="sellTriggerTable"></div><div class="pager" id="sellTriggerPager"></div></div>
+<div id="avgHistory" class="card hidden"><div class="badges" id="avgHistoryBadges"></div><div class="table-area" id="avgHistoryTable"></div><div class="pager" id="avgHistoryPager"></div></div>
 
-<div id="daily" class="card hidden">
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;">
-    <label style="font-weight:700;color:var(--blue2);font-size:12px;">Group By:</label>
-    <select id="dlGroupSelect" onchange="renderDailyLedger();renderOverview()" style="min-width:100px;">
-      <option value="day">Day</option><option value="week">Week</option><option value="month">Month</option>
-    </select>
-  </div>
-  <div class="table-area" id="dailyTable"></div>
-</div>
+<div id="daily" class="card hidden"><div class="table-area" id="dailyTable"></div></div>
 
 <div id="tradeHistory" class="card hidden">
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;">
     <input type="text" id="thSearch" placeholder="Search stock..." oninput="renderTradeHistory()" style="width:190px;">
     <select id="thStatusFilter" onchange="renderTradeHistory()" style="min-width:120px;">
-      <option value="all">All Status</option><option value="hold">Holding</option><option value="sold">Sold</option>
+      <option value="all">All Status</option><option value="open">Open</option><option value="closed">Closed</option>
     </select>
   </div>
   <div id="tradeHistorySummary" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;"></div>
@@ -413,7 +350,7 @@ tbody td{padding:9px 10px;font-size:12.5px;}
   <div id="forceExitStats" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding:11px;background:var(--surface2);border-radius:8px;align-items:center;"></div>
   <div class="table-area">
     <table id="forceExitTable">
-      <thead><tr><th>Stock</th><th>Buy Date</th><th>Market Days</th><th>Calendar Days</th><th>Qty</th><th>Avg Buy</th><th>LTP</th><th>Investment</th><th>P&amp;L</th><th>Action</th></tr></thead>
+      <thead><tr><th>#</th><th>Stock</th><th>Buy Date</th><th>Avg Buy</th><th>LTP</th><th>Market Days</th><th>Days Left</th><th>P&amp;L</th><th>P&amp;L %</th><th>Action</th></tr></thead>
       <tbody id="forceExitBody"></tbody>
     </table>
   </div>
@@ -461,23 +398,18 @@ tbody td{padding:9px 10px;font-size:12.5px;}
   <div class="pager" id="mdPager"></div>
 </div>
 
-</div><!-- /container -->
-
-<div id="stockDetailView" style="display:none;max-width:1100px;margin:0 auto;padding:20px;">
-  <div id="sdCard" style="background:var(--surface);border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+<div id="stockDetailView" style="display:none;">
+  <div id="sdCard">
     <div id="sdHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;">
-      <div>
-        <h3 id="sdTitle" style="margin:0;color:var(--navy);font-size:17px;font-weight:800;"></h3>
-        <div id="sdSubtitle" style="font-size:12px;color:var(--text3);margin-top:4px;"></div>
-      </div>
+      <h3 id="sdTitle" style="margin:0;color:var(--navy);font-size:17px;font-weight:800;"></h3>
       <div id="sdExportButtons" style="display:flex;gap:7px;"></div>
-      <button onclick="closeStockDetail()" style="background:#64748b;padding:6px 13px;font-size:12px;color:#fff;border:none;border-radius:6px;cursor:pointer;">✕ Close</button>
+      <button onclick="document.getElementById('stockDetailView').style.display='none'" style="background:#64748b;padding:6px 13px;font-size:12px;">✕ Close</button>
     </div>
-    <div id="sdBadges" style="margin-bottom:14px;"></div>
-    <div id="sdPager" style="margin-bottom:10px;"></div>
-    <div id="sdTableBody"></div>
+    <div id="sdContent"></div>
   </div>
 </div>
+
+</div><!-- /container -->
 
 <footer>
   <span>PS Market</span> — BTST Trading Dashboard &nbsp;|&nbsp; Educational Purpose Only &nbsp;|&nbsp; Not SEBI Registered
@@ -485,8 +417,6 @@ tbody td{padding:9px 10px;font-size:12.5px;}
 
 <script>
 let wb=null,allRows=[],selectedDate='',charts={};
-let globalSearchTerm = '';
-const EXPORT_CONFIG = { scale: 2, rowsPerPage: 15, imgWidth: 1400, imgHeight: 900 };
 const pageState={calls:{page:1,size:100},ledger:{page:1,size:100},holding:{page:1,size:100},closed:{page:1,size:100},avgTrigger:{page:1,size:100},sellTrigger:{page:1,size:100},avgHistory:{page:1,size:100},forceExit:{page:1,size:100}};
 
 // ── AUTO-FETCH from GitHub Pages ──────────────────────────────────────────
@@ -560,17 +490,8 @@ async function autoLoadFromGitHubPages() {
                     if (k==='CLOSE_PRICE')closePrice = parseNum(row[key]);
                 }
                 if (symbol && dateVal) {
-                    const dateKey = parseDateFromExcel(dateVal);
-                    if (dateKey && (prevClose || openPrice || closePrice)) {
-                        if (!stockHistoryData[symbol]) stockHistoryData[symbol] = {};
-                        stockHistoryData[symbol][dateKey] = {
-                            prev_close: prevClose,
-                            open: openPrice,
-                            high: highPrice,
-                            low: lowPrice,
-                            close: closePrice
-                        };
-                    }
+                    if (!stockHistoryData[symbol]) stockHistoryData[symbol] = [];
+                    stockHistoryData[symbol].push({date:dateVal,prevClose,openPrice,highPrice,lowPrice,closePrice});
                 }
             });
         });
@@ -633,7 +554,7 @@ async function autoLoadFromGitHubPages() {
 document.addEventListener('DOMContentLoaded', autoLoadFromGitHubPages);
 // ─────────────────────────────────────────────────────────────────────────────
 
-const els={file:document.getElementById('file'),fileInfo:document.getElementById('fileInfo'),loading:document.getElementById('loading'),loadingText:document.getElementById('loadingText'),dateBox:document.getElementById('dateBox'),dateSelect:document.getElementById('dateSelect'),dlGroup:document.getElementById('dlGroupSelect'),topToolbar:document.getElementById('topToolbar'),filterPill:document.getElementById('filterPill'),tabs:document.getElementById('tabs'),exports:document.getElementById('exports'),overviewStats:document.getElementById('overviewStats'),ledgerBadges:document.getElementById('ledgerBadges'),holdingBadges:document.getElementById('holdingBadges'),closedBadges:document.getElementById('closedBadges'),ledgerTable:document.getElementById('ledgerTable'),callsTable:document.getElementById('callsTable'),holdingTable:document.getElementById('holdingTable'),closedTable:document.getElementById('closedTable'),dailyTable:document.getElementById('dailyTable'),ledgerPager:document.getElementById('ledgerPager'),callsPager:document.getElementById('callsPager'),holdingPager:document.getElementById('holdingPager'),closedPager:document.getElementById('closedPager'),avgTriggerTable:document.getElementById('avgTriggerTable'),avgTriggerPager:document.getElementById('avgTriggerPager'),sellTriggerTable:document.getElementById('sellTriggerTable'),sellTriggerPager:document.getElementById('sellTriggerPager'),avgHistoryTable:document.getElementById('avgHistoryTable'),avgHistoryPager:document.getElementById('avgHistoryPager'),callsBadges:document.getElementById('callsBadges'),closedStatusFilter:document.getElementById('closedStatusFilter')};
+const els={file:document.getElementById('file'),fileInfo:document.getElementById('fileInfo'),loading:document.getElementById('loading'),loadingText:document.getElementById('loadingText'),dateBox:document.getElementById('dateBox'),dateSelect:document.getElementById('dateSelect'),dlGroup:document.getElementById('dlGroup'),filterPill:document.getElementById('filterPill'),tabs:document.getElementById('tabs'),exports:document.getElementById('exports'),overviewStats:document.getElementById('overviewStats'),ledgerBadges:document.getElementById('ledgerBadges'),holdingBadges:document.getElementById('holdingBadges'),closedBadges:document.getElementById('closedBadges'),ledgerTable:document.getElementById('ledgerTable'),callsTable:document.getElementById('callsTable'),holdingTable:document.getElementById('holdingTable'),closedTable:document.getElementById('closedTable'),dailyTable:document.getElementById('dailyTable'),ledgerPager:document.getElementById('ledgerPager'),callsPager:document.getElementById('callsPager'),holdingPager:document.getElementById('holdingPager'),closedPager:document.getElementById('closedPager'),avgTriggerTable:document.getElementById('avgTriggerTable'),avgTriggerPager:document.getElementById('avgTriggerPager'),sellTriggerTable:document.getElementById('sellTriggerTable'),sellTriggerPager:document.getElementById('sellTriggerPager'),avgHistoryTable:document.getElementById('avgHistoryTable'),avgHistoryPager:document.getElementById('avgHistoryPager'),callsBadges:document.getElementById('callsBadges'),closedStatusFilter:document.getElementById('closedStatusFilter')};
 
 
 function parseNum(v){if(!v)return 0;const n=parseFloat(String(v).replace(/,/g,''));return isNaN(n)?0:n}
@@ -659,26 +580,6 @@ function parseDateFromExcel(dateValue) {
             const day = parseInt(match[1], 10);
             const month = months[match[2].toLowerCase()];
             const year = parseInt(match[3], 10);
-            const d = new Date(year, month, day);
-            return fmtDateLocalFromDate(d);
-        }
-        
-        // Try DD-MM-YYYY format (30-03-2026) — common XLSX.js output with cellDates:true
-        const ddmmyyyy = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
-        if(ddmmyyyy) {
-            const day = parseInt(ddmmyyyy[1], 10);
-            const month = parseInt(ddmmyyyy[2], 10) - 1;
-            const year = parseInt(ddmmyyyy[3], 10);
-            const d = new Date(year, month, day);
-            return fmtDateLocalFromDate(d);
-        }
-        
-        // Try DD/MM/YYYY format
-        const ddmmyyyySlash = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-        if(ddmmyyyySlash) {
-            const day = parseInt(ddmmyyyySlash[1], 10);
-            const month = parseInt(ddmmyyyySlash[2], 10) - 1;
-            const year = parseInt(ddmmyyyySlash[3], 10);
             const d = new Date(year, month, day);
             return fmtDateLocalFromDate(d);
         }
@@ -720,10 +621,6 @@ function statusNorm(r){return String(r['Status']||'').trim().toLowerCase()}
 function isClosed(r){const soldP=parseNum(r['SoldPrice']);const soldD=r['SoldDate'];const st=statusNorm(r);return soldP>0||!!soldD||st==='closed'||st==='exit'}
 function isExpired(r){return statusNorm(r)==='expired'}
 function statusUI(r){return isClosed(r)?'Closed':'Open'}
-
-let dateRangeActive = false;
-let fromDateGlobal = null;
-let toDateGlobal = null;
 
 // DATE RANGE FILTER FUNCTIONS
 function initializeDateRangeFilter(){
@@ -776,60 +673,16 @@ function resetDateRange(){
     showToast('✅ Filter Reset', 'info');
 }
 
-// Global Search Functions
-function onGlobalSearch() {
-    const input = document.getElementById('globalSearch');
-    globalSearchTerm = (input.value || '').trim().toLowerCase();
-    const pill = document.getElementById('globalSearchPill');
-    const resultsEl = document.getElementById('globalSearchResults');
-    
-    if (globalSearchTerm) {
-        const matchCount = allRows.filter(r => {
-            const name = String(r['StockName'] || '').toLowerCase();
-            return name.includes(globalSearchTerm);
-        }).length;
-        pill.style.display = 'inline-block';
-        pill.textContent = `"${input.value.trim()}"`;
-        pill.style.borderColor = '#2563eb';
-        pill.style.color = '#2563eb';
-        resultsEl.style.display = 'block';
-        resultsEl.textContent = `${matchCount} matching record${matchCount !== 1 ? 's' : ''} found`;
-    } else {
-        pill.style.display = 'none';
-        resultsEl.style.display = 'none';
-    }
-    
-    Object.keys(pageState).forEach(k => pageState[k].page = 1);
-    renderAllTablesOnly();
-}
-
-function clearGlobalSearch() {
-    const input = document.getElementById('globalSearch');
-    input.value = '';
-    globalSearchTerm = '';
-    document.getElementById('globalSearchPill').style.display = 'none';
-    document.getElementById('globalSearchResults').style.display = 'none';
-    Object.keys(pageState).forEach(k => pageState[k].page = 1);
-    renderAllTablesOnly();
-    showToast('Search cleared', 'info');
-}
-
-function matchesGlobalSearch(r) {
-    if (!globalSearchTerm) return true;
-    const name = String(r['StockName'] || '').toLowerCase();
-    return name.includes(globalSearchTerm);
-}
-
 // filteredRows
 function filteredRows(){
     // Always exclude Invalid rows from all tabs — they appear only in overview counter
     const validRows = allRows.filter(r => !isInvalid(r));
-    if(!selectedDate)return validRows.filter(matchesGlobalSearch);
+    if(!selectedDate)return validRows;
     let rows=validRows.filter(r=>{const d=predDateKey(r);return d&&dateLE(d,selectedDate)});
     if(dateRangeActive&&fromDateGlobal&&toDateGlobal){
         rows=rows.filter(r=>{const d=predDateKey(r);return d&&dateLE(fromDateGlobal,d)&&dateLE(d,toDateGlobal)})
     }
-    return rows.filter(matchesGlobalSearch);
+    return rows
 }
 
 // Filter Functions
@@ -968,7 +821,6 @@ function populateDates(){
     selectedDate=dates[0];
     els.dateBox.classList.remove('hidden');
     els.tabs.classList.remove('hidden');
-    document.getElementById('globalSearchBox').classList.remove('hidden');
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
     setLoading(false)
 }
@@ -989,7 +841,7 @@ function switchTab(name){
     if(name==='marketData')renderMarketData();
 }
 
-// onchange handler already set inline on dlGroupSelect element
+els.dlGroup.addEventListener('change',()=>{renderDailyLedger();renderOverview()});
 
 /* PART 4: BADGE RENDERING */
 
@@ -1100,24 +952,6 @@ function populateTradeHistoryData(divElement, stock, startDateStr, endDateStr) {
         }
     });
 
-    // FIX: If sold date data is missing from stockHistoryData, get it from the trade row
-    const tradeRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
-    if(tradeRow && isClosed(tradeRow) && endDateStr) {
-        const hasSoldDateData = dataPoints.some(pt => pt.date === endDateStr);
-        if(!hasSoldDateData) {
-            const soldData = {
-                prev_close: parseNum(tradeRow['SoldPrevClose']) || 0,
-                open: parseNum(tradeRow['SoldOpen']) || 0,
-                high: parseNum(tradeRow['SoldHigh']) || 0,
-                low: parseNum(tradeRow['SoldLow']) || 0,
-                close: parseNum(tradeRow['SoldClose']) || 0
-            };
-            if(soldData.high > 0 || soldData.low > 0 || soldData.close > 0) {
-                dataPoints.push({ date: endDateStr, data: soldData });
-            }
-        }
-    }
-
     if (dataPoints.length === 0) {
         html = '<div style="padding:10px; color:#ef4444;">No historical data found for this stock/date range.</div>';
         divElement.innerHTML = html;
@@ -1166,15 +1000,13 @@ function renderTradeHistory(){
     const container=document.getElementById('tradeHistoryContent');
     const summaryEl=document.getElementById('tradeHistorySummary');
     if(!container)return;
-    const filterVal=document.getElementById('thStatusFilter')?.value||'all';
-    const thSearchVal=(document.getElementById('thSearch')?.value||'').trim().toLowerCase();
+    const filterVal=document.getElementById('tradeHistoryFilter')?.value||'all';
     
     const rows=filteredRows().filter(r=>{
         const s=String(r['Status']||'').trim().toLowerCase();
         const o=String(r['Order']||'').trim().toLowerCase();
         if(s==='expired')return false;
         if(o==='invalid'||o==='pending')return false;
-        if(thSearchVal && !String(r['StockName']||'').toLowerCase().includes(thSearchVal)) return false;
         return true;
     });
     
@@ -1484,9 +1316,7 @@ function monthKey(yyyy_mm_dd){return yyyy_mm_dd.slice(0,7)}
 /* PART 8: AVG BUY & SELL TRIGGERS */
 
 function renderAvgBuyTrigger(){
-    const searchVal=(document.getElementById('avgTriggerSearch')?.value||'').trim().toLowerCase();
-    let rows=filteredAvgBuyTriggers();
-    if(searchVal) rows=rows.filter(r=>String(r['StockName']||'').toLowerCase().includes(searchVal));
+    const rows=filteredAvgBuyTriggers();
     const badgeEl=document.getElementById('avgTriggerBadges');
     const tableEl=els.avgTriggerTable;
     const pagerEl=els.avgTriggerPager;
@@ -1509,9 +1339,7 @@ function renderAvgBuyTrigger(){
 }
 
 function renderSellTrigger(){
-    const searchVal=(document.getElementById('sellTriggerSearch')?.value||'').trim().toLowerCase();
-    let rows=filteredSellTriggers();
-    if(searchVal) rows=rows.filter(r=>String(r['StockName']||'').toLowerCase().includes(searchVal));
+    const rows=filteredSellTriggers();
     const badgeEl=document.getElementById('sellTriggerBadges');
     const tableEl=els.sellTriggerTable;
     const pagerEl=els.sellTriggerPager;
@@ -1560,9 +1388,7 @@ function getAvgHistoryData(){
 }
 
 function renderAvgHistory(){
-    const searchVal=(document.getElementById('avgHistorySearch')?.value||'').trim().toLowerCase();
-    let rows=getAvgHistoryData();
-    if(searchVal) rows=rows.filter(r=>String(r.stock||'').toLowerCase().includes(searchVal));
+    const rows=getAvgHistoryData();
     const tableEl=els.avgHistoryTable;
     const pagerEl=els.avgHistoryPager;
     const badgeEl=document.getElementById('avgHistoryBadges');
@@ -1585,7 +1411,7 @@ function renderStockHistory(){
     const container = document.getElementById('stockHistoryTable');
     if(!container) return;
     
-    const shSearchVal = (document.getElementById('shSearch')?.value||'').trim().toLowerCase();
+    const filterVal = document.getElementById('stockHistoryFilter')?.value || 'all';
 
     let rows = filteredRows().filter(r => {
         const s = String(r['Status']||'').trim().toLowerCase();
@@ -1595,7 +1421,8 @@ function renderStockHistory(){
 
         if(!boughtDateKey(r)) return false;
 
-        if(shSearchVal && !String(r['StockName']||'').toLowerCase().includes(shSearchVal)) return false;
+        if(filterVal === 'holding' && isClosed(r)) return false;
+        if(filterVal === 'closed' && !isClosed(r)) return false;
 
         return true;
     }).sort((a,b)=>(boughtDateKey(b)>boughtDateKey(a)?1:-1));
@@ -1710,11 +1537,11 @@ function openStockDetail(stock, startDateStr, endDateStr) {
     const detailView = document.getElementById('stockDetailView');
     
     // Switch Views
-    mainContainer.style.display = 'none';
-    detailView.style.display = 'block';
+    mainContainer.classList.add('hidden');
+    detailView.classList.add('active');
     
     // Populate Header
-    document.getElementById('sdTitle').textContent = `Stock History: ${stock}`;
+    document.getElementById('sdTitle').textContent = `📊 Stock History: ${stock}`;
     document.getElementById('sdSubtitle').textContent = `From: ${startDateStr} To: ${endDateStr}`;
     
     // Populate Page Content
@@ -1725,24 +1552,8 @@ function closeStockDetail() {
     const mainContainer = document.querySelector('.container');
     const detailView = document.getElementById('stockDetailView');
     
-    detailView.style.display = 'none';
-    mainContainer.style.display = '';
-}
-
-function applyStockHistoryFilter() {
-    renderStockHistory();
-    showToast('Filter applied', 'success');
-}
-
-function resetStockHistoryFilter() {
-    const shSearch = document.getElementById('shSearch');
-    const shFrom = document.getElementById('shFromDate');
-    const shTo = document.getElementById('shToDate');
-    if(shSearch) shSearch.value = '';
-    if(shFrom) shFrom.value = '';
-    if(shTo) shTo.value = '';
-    renderStockHistory();
-    showToast('Filter reset', 'info');
+    detailView.classList.remove('active');
+    mainContainer.classList.remove('hidden');
 }
 
 function renderFullStockHistory(stock, startDateStr, endDateStr) {
@@ -2102,20 +1913,6 @@ function exportExcel(){
     XLSX.utils.book_append_sheet(out,XLSX.utils.json_to_sheet(rows),'filtered');
     XLSX.writeFile(out,`Dashboard_${selectedDate}.xlsx`);
     showToast('Exported!', 'success');
-}
-
-function exportCSVData(){
-    const rows=filteredRows();
-    if(!rows.length){showToast('No data', 'error');return}
-    const ws=XLSX.utils.json_to_sheet(rows);
-    const csv=XLSX.utils.sheet_to_csv(ws);
-    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-    const link=document.createElement('a');
-    link.href=URL.createObjectURL(blob);
-    link.download=`Dashboard_${selectedDate}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-    showToast('CSV Exported!', 'success');
 }
 
 async function exportImage(){
@@ -2564,22 +2361,14 @@ async function exportTradeHistoryImage(stockName) {
             </div>
         `;
 
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:900px;background:#ffffff;';
-        wrapper.innerHTML = html;
-        document.body.appendChild(wrapper);
-
-        const canvas = await html2canvas(wrapper, {
+        const canvas = await html2canvas(document.body, {
             backgroundColor: '#ffffff',
             scale: 2,
-            logging: false,
-            useCORS: true
+            logging: false
         });
 
-        document.body.removeChild(wrapper);
-
         const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
+        link.href = canvas.toDataURL();
         link.download = `${stockName}_trade_summary.png`;
         link.click();
 
@@ -2801,22 +2590,14 @@ async function exportStockHistoryImage(stock, startDateStr, endDateStr) {
                 </div>
             `;
             
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:1000px;background:#ffffff;';
-            wrapper.innerHTML = html;
-            document.body.appendChild(wrapper);
-
-            const canvas = await html2canvas(wrapper, {
+            const canvas = await html2canvas(document.body, {
                 backgroundColor: '#ffffff',
                 scale: 2,
-                logging: false,
-                useCORS: true
+                logging: false
             });
-
-            document.body.removeChild(wrapper);
             
             const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
+            link.href = canvas.toDataURL();
             link.download = `${stock}_history_page${page+1}.png`;
             link.click();
         }
@@ -3154,22 +2935,14 @@ async function exportForceExitImage(totalRows, amberCount, amberInv, amberPnl, r
                 </div>
             `;
             
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:1200px;background:#ffffff;';
-            wrapper.innerHTML = html;
-            document.body.appendChild(wrapper);
-
-            const canvas = await html2canvas(wrapper, {
+            const canvas = await html2canvas(document.body, {
                 backgroundColor: '#ffffff',
                 scale: 2,
-                logging: false,
-                useCORS: true
+                logging: false
             });
-
-            document.body.removeChild(wrapper);
             
             const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
+            link.href = canvas.toDataURL();
             link.download = `ForceExit_page${page+1}.png`;
             link.click();
         }
