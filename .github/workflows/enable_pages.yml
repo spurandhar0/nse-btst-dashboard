@@ -13,35 +13,36 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: Enable GitHub Pages via API
-        run: |
-          echo "Enabling GitHub Pages on this repo..."
-          RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/pages" \
-            -d '{"source":{"branch":"main","path":"/"}}')
-          
-          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-          BODY=$(echo "$RESPONSE" | head -1)
-          
-          echo "HTTP Code: $HTTP_CODE"
-          echo "Response: $BODY"
-          
-          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "409" ]; then
-            echo "✅ GitHub Pages enabled (201=new, 409=already exists)"
-          else
-            echo "⚠️ Response: $HTTP_CODE - may need manual enable in Settings"
-          fi
+    - name: Enable GitHub Pages via API
+      run: |
+        echo "Enabling GitHub Pages on this repo..."
+        RESPONSE=$(curl -s -w "\n%{http_code}" \
+          -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/pages" \
+          -d '{"source":{"branch":"main","path":"/"}}')
 
-      - name: Verify Pages URL
-        run: |
-          sleep 3
-          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/pages" \
-            | python3 -c "
+        HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+        BODY=$(echo "$RESPONSE" | head -1)
+
+        echo "HTTP Code: $HTTP_CODE"
+        echo "Response: $BODY"
+
+        if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "409" ]; then
+          echo "Pages enabled (201=new, 409=already exists)"
+        else
+          echo "Response: $HTTP_CODE - may need manual enable in Settings"
+        fi
+
+    - name: Verify Pages URL
+      run: |
+        sleep 3
+        curl -s \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/pages" \
+          | jq '{url: .html_url, status: .status, source: .source}'
 import sys,json
 try:
     d=json.load(sys.stdin)
