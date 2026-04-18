@@ -29,14 +29,14 @@ jobs:
         else
           echo "Response: $HTTP_CODE - may need manual enable in Settings"
         fi
-    - name: Verify Pages URL
+        - name: Verify Pages URL
       run: |
         sleep 3
         curl -s \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -H "Accept: application/vnd.github.v3+json" \
           "https://api.github.com/repos/${{ github.repository }}/pages" \
-          | python3 -c "
+          | jq -r '"Pages URL: \(.html_url // "not set")\nStatus: \(.status // "unknown")\nSource: \(.source | tostring)"'
         import sys, json
         try:
             d = json.load(sys.stdin)
