@@ -820,38 +820,16 @@ function populateDates(){
     for(const r of allRows){if(isInvalid(r))continue;const d=predDateKey(r);if(d)set.add(d)}
     const dates=Array.from(set).sort((a,b)=>new Date(b+'T00:00:00')-new Date(a+'T00:00:00'));
     if(!dates.length){
-        els.dateBox.style.display='';
         els.dateBox.classList.remove('hidden');
         els.tabs.classList.add('hidden');
         setLoading(false);
         return
     }
     selectedDate=dates[0];
-    els.dateSelect.innerHTML='';
-    dates.forEach(d=>{
-        const opt=document.createElement('option');
-        opt.value=d; opt.textContent=d;
-        els.dateSelect.appendChild(opt);
-    });
-    els.dateSelect.value=selectedDate;
-    els.dateBox.style.display='';
     els.dateBox.classList.remove('hidden');
     els.tabs.classList.remove('hidden');
-    els.dlGroup.classList.remove('hidden');
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
     setLoading(false)
-}
-
-function onDateChange(dateStr){
-    if(!dateStr) return;
-    selectedDate=dateStr;
-    dateRangeActive=false;
-    fromDateGlobal=null;
-    toDateGlobal=null;
-    const filterPill=document.getElementById('filterPill');
-    if(filterPill){filterPill.textContent='';filterPill.style.display='none';}
-    Object.keys(pageState).forEach(k=>pageState[k].page=1);
-    renderAll();
 }
 
 function switchTab(name){
