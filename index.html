@@ -989,23 +989,10 @@ function toggleTradeHistoryDetail(divId, stock, startDate, endDate) {
 }
 
 function populateTradeHistoryData(divElement, stock, startDateStr, endDateStr) {
-    const dates = [];
-    const start = new Date(startDateStr + 'T00:00:00'); 
-    const end = new Date(endDateStr + 'T00:00:00');
-    
-    // Loop from start to end (inclusive)
-    let current = new Date(start);
-    while (current <= end) {
-        const dateKey = current.toISOString().split('T')[0];
-        dates.push(dateKey);
-        current.setDate(current.getDate() + 1);
-    }
-
     let html = `<div style="text-align:right; margin-bottom:5px;"><button class="btn-sm" onclick="this.parentElement.parentElement.classList.add('hidden')" style="background:#94a3b8;">Hide</button></div>`;
     html += `<table class="history-table"><thead><tr><th>Date</th><th>Prev.Close</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr></thead><tbody>`;
 
-    // Gather valid data points — use SoldOHLCV from Pickse for sold date
-    const dataPoints = [];
+    // Find trade row for sold OHLCV
     const trRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
     const isSoldTr = trRow && isClosed(trRow);
     let soldOHLCV = null;
@@ -1020,16 +1007,26 @@ function populateTradeHistoryData(divElement, stock, startDateStr, endDateStr) {
         if(sd.close > 0 || sd.high > 0) soldOHLCV = sd;
     }
 
-    dates.forEach(d => {
-        const isSoldDay = isSoldTr && d === endDateStr;
-        if(isSoldDay && soldOHLCV) {
-            dataPoints.push({date: d, data: soldOHLCV});
-        } else if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
-            dataPoints.push({date: d, data: stockHistoryData[stock][d]});
-        } else if(isSoldDay) {
-            dataPoints.push({date: d, data: {prev_close:0, open:0, high:0, low:0, close:0}});
-        }
+    // Only use dates that actually exist in stockHistoryData (no calendar loop)
+    const symData = stockHistoryData[stock] || {};
+    const availableDates = Object.keys(symData)
+        .filter(d => d >= startDateStr && d <= endDateStr)
+        .sort();
+
+    const dataPoints = [];
+    availableDates.forEach(d => {
+        dataPoints.push({date: d, data: symData[d]});
     });
+
+    // Always show buy date — if missing, show with zeros + BUY badge
+    if(!availableDates.includes(startDateStr)) {
+        dataPoints.unshift({date: startDateStr, data: {prev_close:0, open:0, high:0, low:0, close:0}});
+    }
+
+    // Always show sold date using Pickse SoldOHLCV columns
+    if(isSoldTr && endDateStr && soldOHLCV && !availableDates.includes(endDateStr)) {
+        dataPoints.push({date: endDateStr, data: soldOHLCV});
+    }
 
     if (dataPoints.length === 0) {
         html = '<div style="padding:10px; color:#ef4444;">No historical data found for this stock/date range.</div>';
@@ -1669,24 +1666,13 @@ function closeStockDetail() {
 }
 
 function renderFullStockHistory(stock, startDateStr, endDateStr) {
-    const dates = [];
-    const start = new Date(startDateStr + 'T00:00:00');
-    const end = new Date(endDateStr + 'T00:00:00');
-    
-    let current = new Date(start);
-    while (current <= end) {
-        const dateKey = current.toISOString().split('T')[0];
-        dates.push(dateKey);
-        current.setDate(current.getDate() + 1);
-    }
-
     const dataPoints = [];
 
     // Find trade row to get sold OHLCV columns
     const tradeRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
     const isSoldTrade = tradeRow && isClosed(tradeRow);
 
-    // Build sold date OHLCV from Pickse columns (SoldPrevClose/SoldOpen etc.)
+    // Build sold date OHLCV from Pickse columns
     let soldDateOHLCV = null;
     if(isSoldTrade && endDateStr) {
         const sd = {
@@ -1699,21 +1685,24 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
         if(sd.close > 0 || sd.high > 0 || sd.low > 0) soldDateOHLCV = sd;
     }
 
-    dates.forEach(d => {
+    // Only use dates that actually exist in stockHistoryData (no calendar loop)
+    const symData = stockHistoryData[stock] || {};
+    const availableDates = Object.keys(symData)
+        .filter(d => d >= startDateStr && d <= endDateStr)
+        .sort();
+
+    availableDates.forEach(d => {
         const isSoldDay = isSoldTrade && d === endDateStr;
-        // For sold date: prefer Pickse SoldOHLCV columns, fallback to stockHistoryData
-        if(isSoldDay && soldDateOHLCV) {
-            dataPoints.push({date: d, data: soldDateOHLCV, isSold: true});
-        } else if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
-            dataPoints.push({date: d, data: stockHistoryData[stock][d], isSold: isSoldDay});
-        } else if(isSoldDay && !soldDateOHLCV) {
-            // Sold date has no data at all — still show as sold marker with zeros
-            dataPoints.push({date: d, data: {prev_close:0, open:0, high:0, low:0, close:0}, isSold: true});
-        }
+        dataPoints.push({date: d, data: symData[d], isSold: isSoldDay});
     });
 
-    // If sold date not in date range (e.g. same day buy+sell edge case), append it
-    if(isSoldTrade && endDateStr && !dates.includes(endDateStr) && soldDateOHLCV) {
+    // Always show buy date — if not in BuyHistory sheet, show with zeros + BUY badge
+    if(!availableDates.includes(startDateStr)) {
+        dataPoints.unshift({date: startDateStr, data: {prev_close:0, open:0, high:0, low:0, close:0}, isSold: false});
+    }
+
+    // Always show sold date using Pickse SoldOHLCV columns
+    if(isSoldTrade && endDateStr && soldDateOHLCV && !availableDates.includes(endDateStr)) {
         dataPoints.push({date: endDateStr, data: soldDateOHLCV, isSold: true});
     }
 
