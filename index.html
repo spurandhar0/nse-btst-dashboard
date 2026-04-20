@@ -1599,8 +1599,11 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
 
     const dataPoints = [];
     dates.forEach(d => {
-        if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
-            dataPoints.push({date: d, data: stockHistoryData[stock][d], isSold: false});
+        // Convert ISO date (YYYY-MM-DD) to DD-MM-YYYY format to match stored key format
+        const [year, month, day] = d.split('-');
+        const ddmmyyyy = day + '-' + month + '-' + year;
+        if(stockHistoryData[stock] && stockHistoryData[stock][ddmmyyyy]) {
+            dataPoints.push({date: d, data: stockHistoryData[stock][ddmmyyyy], isSold: false});
         }
     });
 
