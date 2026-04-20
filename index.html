@@ -192,7 +192,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
 <div class="container">
 
-<div class="cstrip" id="dateBox" style="">
+<div class="cstrip" id="dateBox" style="display:none;">
   <span class="slbl">Signal Date:</span>
   <select id="dateSelect" onchange="onDateChange(this.value)" style="min-width:155px;"></select>
   <span class="slbl" style="margin-left:6px;">Range:</span>
@@ -201,8 +201,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
   <input type="date" id="toDate">
   <button onclick="applyDateRange()" style="padding:6px 13px;font-size:12px;">Apply</button>
   <button onclick="resetDateRange()" style="padding:6px 13px;font-size:12px;background:#64748b;">Reset</button>
-  <span id="filterPill" class="pill" style="margin-left:4px;"></span>
-  <span id="globalLastSignal" style="margin-left:12px;font-size:12px;font-weight:700;color:#2563eb;"></span>
+  <span id="filterPill" class="pill" style="display:none;margin-left:4px;"></span>
   <div id="dlGroup" class="export hidden" style="margin-left:auto;gap:6px;">
     <button onclick="autoLoadFromGitHubPages()" style="padding:6px 13px;font-size:12px;background:#0891b2;">↻ Refresh</button>
     <button onclick="exportAll()" style="padding:6px 13px;font-size:12px;">Export Excel</button>
@@ -251,14 +250,6 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
 <div id="calls" class="card hidden">
   <div class="badges" id="callsBadges"></div>
-  <div style="margin-bottom:10px;">
-    <label style="font-weight:700;color:var(--blue2);font-size:12px;">Filter Status:</label>
-    <select id="callsStatusFilter" onchange="renderCalls()" style="min-width:140px;">
-      <option value="all">All</option>
-      <option value="fresh">Fresh Call Only</option>
-      <option value="open">Open Call Only</option>
-    </select>
-  </div>
   <div class="table-area" id="callsTable"></div>
   <div class="pager" id="callsPager"></div>
 </div>
@@ -500,16 +491,9 @@ async function autoLoadFromGitHubPages() {
                     if (k==='LOW_PRICE')  lowPrice   = parseNum(row[key]);
                     if (k==='CLOSE_PRICE')closePrice = parseNum(row[key]);
                 }
-                const dateKey = parseDateFromExcel(dateVal);
-                if (symbol && dateKey && (prevClose || openPrice || closePrice)) {
-                    if (!stockHistoryData[symbol]) stockHistoryData[symbol] = {};
-                    stockHistoryData[symbol][dateKey] = {
-                        prev_close: prevClose,
-                        open:       openPrice,
-                        high:       highPrice,
-                        low:        lowPrice,
-                        close:      closePrice
-                    };
+                if (symbol && dateVal) {
+                    if (!stockHistoryData[symbol]) stockHistoryData[symbol] = [];
+                    stockHistoryData[symbol].push({date:dateVal,prevClose,openPrice,highPrice,lowPrice,closePrice});
                 }
             });
         });
@@ -672,7 +656,6 @@ function applyDateRange(){
     filterPill.style.color='#2563eb';
     filterPill.style.borderColor='#2563eb';
     filterPill.style.background='rgba(37, 99, 235, 0.1)';
-    filterPill.style.display='inline-block';
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
     renderAll();
     showToast(`✅ Filter Applied: ${fromDate} to ${toDate}`, 'success');
@@ -688,11 +671,10 @@ function resetDateRange(){
     toDateGlobal=null;
     dateRangeActive=false;
     const filterPill=document.getElementById('filterPill');
-    filterPill.textContent='';
+    filterPill.textContent=selectedDate?`Showing BuyDate <= ${selectedDate}`:'';
     filterPill.style.color='#2563eb';
     filterPill.style.borderColor='#cbd5e1';
     filterPill.style.background='transparent';
-    filterPill.style.display='none';
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
     renderAll();
     showToast('✅ Filter Reset', 'info');
@@ -712,28 +694,13 @@ function filteredRows(){
 
 // Filter Functions
 function filteredCalls() {
-    // Fresh Call = Invalid + Result "Invalid: No data on signal date" (holiday/missing — still actionable)
-    // Open Call  = Pending (buy not triggered yet, within 30-day window)
-    // Expired and other Invalid scenarios NOT shown in Calls tab
-    const callsFilter = document.getElementById('callsStatusFilter');
-    const filterVal   = callsFilter ? callsFilter.value : 'all';
-    return allRows.filter(r => {
+    // BTST calls = Pending (fresh/not triggered) + Expired (missed trigger window)
+    // Invalid rows are excluded (no data / suspended / delisted)
+    return filteredRows().filter(r => {
         const o = String(r['Order'] || '').trim().toLowerCase();
-        const isFreshCall = o === 'invalid' && String(r['Result'] || '').trim() === 'Invalid: No data on signal date';
-        const isOpenCall  = o === 'pending';
-        if (!isFreshCall && !isOpenCall) return false;
-        if (filterVal === 'fresh' && !isFreshCall) return false;
-        if (filterVal === 'open'  && !isOpenCall)  return false;
-        // Use global date range filter (same as all other tabs)
-        if (dateRangeActive && fromDateGlobal && toDateGlobal) {
-            const d = predDateKey(r);
-            if (d && (d < fromDateGlobal || d > toDateGlobal)) return false;
-        }
-        return true;
+        return o === 'pending' || o === 'expired';
     });
 }
-
-
 
 function filteredExpired(){return filteredRows().filter(r=>isExpired(r))}
 function filteredHolding(){return filteredRows().filter(r=>statusNorm(r)==='open'&&!isClosed(r))}
@@ -860,14 +827,8 @@ function populateDates(){
     }
     selectedDate=dates[0];
     els.dateBox.classList.remove('hidden');
-    els.dateBox.style.display='flex';
     els.tabs.classList.remove('hidden');
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
-    // Show Last Signal Date in global bar
-    const lastSigEl = document.getElementById('globalLastSignal');
-    if(lastSigEl && dates.length){
-        lastSigEl.textContent = '📅 Last Signal: ' + dates[0];
-    }
     setLoading(false)
 }
 
@@ -1228,9 +1189,11 @@ function renderCalls(){
         return;
     }
     
-    const freshCount = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='invalid'&&String(r['Result']||'').trim()==='Invalid: No data on signal date').length;
-    const openCount  = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
-    badgeEl.innerHTML=`<span class="badge">Total: ${total}</span><span class="badge green">Fresh Call: ${freshCount}</span><span class="badge" style="background:#f59e0b;color:#fff;">Open Call: ${openCount}</span>`;
+    const freshCount = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
+    const openCount = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='executed'&&String(r['Status']||'').trim().toLowerCase()==='open').length;
+    const expiredCount2 = rows.filter(r=>isExpiredRow(r)).length;
+    const invalidCount2  = allRows.filter(r=>isInvalid(r)).length;
+    badgeEl.innerHTML=`<span class="badge">Total: ${total}</span><span class="badge green">Fresh Call: ${freshCount}</span><span class="badge" style="background:#f59e0b;color:#fff;">Open: ${openCount}</span><span class="badge" style="background:#94a3b8;color:#fff;">Expired: ${expiredCount2}</span><span class="badge" style="background:#ef4444;color:#fff;">Invalid: ${invalidCount2}</span>`;
 
     let html='<table><thead><tr><th>Date</th><th>Stock</th><th>1D%</th><th>5D%</th><th>Buy Price</th><th>LTP</th><th>Target</th><th>SL</th><th>Status</th></tr></thead><tbody>';
     for(const r of slice){
@@ -1238,11 +1201,10 @@ function renderCalls(){
         if(buyPrice<=0)continue;
         const ltp=parseNum(r['RecentLTP']||buyPrice);
         const orderStatus=String(r['Order']||'').trim().toLowerCase();
-        const resultVal=String(r['Result']||'').trim();
-        const isFresh    = orderStatus==='invalid' && resultVal==='Invalid: No data on signal date';
-        const isOpenCall = orderStatus==='pending';
-        const statusBtnClass = isFresh ? 'fresh-call' : 'open-call';
-        const statusText     = isFresh ? 'Fresh Call'  : 'Open Call';
+        const isFresh   = orderStatus==='pending';
+        const isExpired2 = orderStatus==='expired';
+        const statusBtnClass = isFresh ? 'fresh-call' : (isExpired2 ? 'expired-call' : 'open-call');
+        const statusText     = isFresh ? 'Fresh Call'  : (isExpired2 ? 'Expired'      : 'Open Call');
         html+=`<tr><td>${toDateStr(r['BuyDate'])}</td><td>${r['StockName']||''}</td><td class="${colorCls(r['1DChange%'])}">${fmtPct(r['1DChange%'])}</td><td class="${colorCls(r['5DLow%'])}">${fmtPct(r['5DLow%'])}</td><td>${fmtCur(buyPrice)}</td><td>${fmtCur(ltp)}</td><td class="green">${fmtCur(parseNum(r['TargetPrice'])||buyPrice*1.10)}</td><td class="red">${fmtCur(parseNum(r['StoplossPrice'])||buyPrice*0.80)}</td><td><button class="status-btn ${statusBtnClass}">${statusText}</button></td></tr>`
     }
     html+='</tbody></table>';
