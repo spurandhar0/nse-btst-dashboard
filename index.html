@@ -419,9 +419,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
       <button onclick="closeStockDetail()" style="background:#64748b;padding:6px 13px;font-size:12px;">✕ Close</button>
     </div>
     <div id="sdBadges" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
-    <div id="sdContent">
-      <div class="table-area"><table><thead><tr><th>Date</th><th>Prev Close</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Change</th></tr></thead><tbody id="sdTableBody"></tbody></table></div>
-    </div>
+    <div id="sdContent"></div>
     <div class="pager" id="sdPager"></div>
   </div>
 </div>
@@ -1647,12 +1645,12 @@ function openStockDetail(stock, startDateStr, endDateStr) {
     if (sub) sub.textContent = `From: ${startDateStr}  To: ${endDateStr}`;
 
     // Clear previous content
-    const sdBadges = document.getElementById('sdBadges');
-    const sdTableBody = document.getElementById('sdTableBody');
-    const sdPager = document.getElementById('sdPager');
-    if (sdBadges) sdBadges.innerHTML = '';
-    if (sdTableBody) sdTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">Loading...</td></tr>';
-    if (sdPager) sdPager.innerHTML = '';
+    const sdBadges   = document.getElementById('sdBadges');
+    const sdContent  = document.getElementById('sdContent');
+    const sdPager    = document.getElementById('sdPager');
+    if (sdBadges)  sdBadges.innerHTML  = '';
+    if (sdContent) sdContent.innerHTML = '<div style="text-align:center;padding:30px;color:#64748b;">Loading...</div>';
+    if (sdPager)   sdPager.innerHTML   = '';
 
     // Populate Page Content
     renderFullStockHistory(stock, startDateStr, endDateStr);
