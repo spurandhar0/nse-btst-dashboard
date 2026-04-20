@@ -509,13 +509,18 @@ async function autoLoadFromGitHubPages() {
                 const dateKey = parseDateFromExcel(dateVal);
                 if (symbol && dateKey && (prevClose || openPrice || closePrice)) {
                     if (!stockHistoryData[symbol]) stockHistoryData[symbol] = {};
-                    stockHistoryData[symbol][dateKey] = {
+                    const entry = {
                         prev_close: prevClose,
                         open:       openPrice,
                         high:       highPrice,
                         low:        lowPrice,
                         close:      closePrice
                     };
+                    stockHistoryData[symbol][dateKey] = entry;
+                    // Also store by raw dateVal in case format differs
+                    if (dateVal && String(dateVal) !== dateKey) {
+                        stockHistoryData[symbol][String(dateVal).slice(0,10)] = entry;
+                    }
                 }
             });
         });
@@ -829,17 +834,21 @@ els.file.addEventListener('change',(e)=>{
                     }
 
                     const dateKey = parseDateFromExcel(dateVal);
-                    
+
                     if(symbol && dateKey && (prevClose || openPrice || closePrice)) {
                         if(!stockHistoryData[symbol]) stockHistoryData[symbol] = {};
-                        
-                        stockHistoryData[symbol][dateKey] = {
+                        const entry = {
                             prev_close: prevClose,
                             open: openPrice,
                             high: highPrice,
                             low: lowPrice,
                             close: closePrice
                         };
+                        stockHistoryData[symbol][dateKey] = entry;
+                        // Also store by raw dateVal in case format differs
+                        if (dateVal && String(dateVal) !== dateKey) {
+                            stockHistoryData[symbol][String(dateVal).slice(0,10)] = entry;
+                        }
                     }
                 });
             });
