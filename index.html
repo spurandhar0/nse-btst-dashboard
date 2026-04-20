@@ -694,11 +694,18 @@ function filteredRows(){
 
 // Filter Functions
 function filteredCalls() {
-    // BTST calls = Pending (fresh/not triggered) + Expired (missed trigger window)
-    // Invalid rows are excluded (no data / suspended / delisted)
-    return filteredRows().filter(r => {
+    // Fresh Call  = Invalid + Result "Invalid: No data on signal date" (holiday/missing — still actionable)
+    // Open Call   = Pending (buy not triggered yet, within 30-day window)
+    // Expired     = Expired (30-day window passed, missed)
+    // Other Invalid scenarios (no market data, data gap, stale) excluded
+    return allRows.filter(r => {
         const o = String(r['Order'] || '').trim().toLowerCase();
-        return o === 'pending' || o === 'expired';
+        if (o === 'pending' || o === 'expired') return true;
+        if (o === 'invalid') {
+            const result = String(r['Result'] || '').trim();
+            return result === 'Invalid: No data on signal date';
+        }
+        return false;
     });
 }
 
@@ -1189,11 +1196,11 @@ function renderCalls(){
         return;
     }
     
-    const freshCount = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
-    const openCount = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='executed'&&String(r['Status']||'').trim().toLowerCase()==='open').length;
+    const freshCount   = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='invalid'&&String(r['Result']||'').trim()==='Invalid: No data on signal date').length;
+    const openCount    = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
     const expiredCount2 = rows.filter(r=>isExpiredRow(r)).length;
-    const invalidCount2  = allRows.filter(r=>isInvalid(r)).length;
-    badgeEl.innerHTML=`<span class="badge">Total: ${total}</span><span class="badge green">Fresh Call: ${freshCount}</span><span class="badge" style="background:#f59e0b;color:#fff;">Open: ${openCount}</span><span class="badge" style="background:#94a3b8;color:#fff;">Expired: ${expiredCount2}</span><span class="badge" style="background:#ef4444;color:#fff;">Invalid: ${invalidCount2}</span>`;
+    const invalidCount2  = allRows.filter(r=>isInvalid(r)&&String(r['Result']||'').trim()!=='Invalid: No data on signal date').length;
+    badgeEl.innerHTML=`<span class="badge">Total: ${total}</span><span class="badge green">Fresh Call: ${freshCount}</span><span class="badge" style="background:#f59e0b;color:#fff;">Open Call: ${openCount}</span><span class="badge" style="background:#94a3b8;color:#fff;">Expired: ${expiredCount2}</span><span class="badge" style="background:#ef4444;color:#fff;">Invalid: ${invalidCount2}</span>`;
 
     let html='<table><thead><tr><th>Date</th><th>Stock</th><th>1D%</th><th>5D%</th><th>Buy Price</th><th>LTP</th><th>Target</th><th>SL</th><th>Status</th></tr></thead><tbody>';
     for(const r of slice){
@@ -1201,10 +1208,12 @@ function renderCalls(){
         if(buyPrice<=0)continue;
         const ltp=parseNum(r['RecentLTP']||buyPrice);
         const orderStatus=String(r['Order']||'').trim().toLowerCase();
-        const isFresh   = orderStatus==='pending';
+        const resultVal=String(r['Result']||'').trim();
+        const isFresh    = orderStatus==='invalid' && resultVal==='Invalid: No data on signal date';
+        const isOpenCall = orderStatus==='pending';
         const isExpired2 = orderStatus==='expired';
-        const statusBtnClass = isFresh ? 'fresh-call' : (isExpired2 ? 'expired-call' : 'open-call');
-        const statusText     = isFresh ? 'Fresh Call'  : (isExpired2 ? 'Expired'      : 'Open Call');
+        const statusBtnClass = isFresh ? 'fresh-call' : (isOpenCall ? 'open-call' : (isExpired2 ? 'expired-call' : ''));
+        const statusText     = isFresh ? 'Fresh Call'  : (isOpenCall ? 'Open Call'  : (isExpired2 ? 'Expired'     : ''));
         html+=`<tr><td>${toDateStr(r['BuyDate'])}</td><td>${r['StockName']||''}</td><td class="${colorCls(r['1DChange%'])}">${fmtPct(r['1DChange%'])}</td><td class="${colorCls(r['5DLow%'])}">${fmtPct(r['5DLow%'])}</td><td>${fmtCur(buyPrice)}</td><td>${fmtCur(ltp)}</td><td class="green">${fmtCur(parseNum(r['TargetPrice'])||buyPrice*1.10)}</td><td class="red">${fmtCur(parseNum(r['StoplossPrice'])||buyPrice*0.80)}</td><td><button class="status-btn ${statusBtnClass}">${statusText}</button></td></tr>`
     }
     html+='</tbody></table>';
