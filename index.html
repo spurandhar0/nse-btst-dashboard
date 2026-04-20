@@ -201,7 +201,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
   <input type="date" id="toDate">
   <button onclick="applyDateRange()" style="padding:6px 13px;font-size:12px;">Apply</button>
   <button onclick="resetDateRange()" style="padding:6px 13px;font-size:12px;background:#64748b;">Reset</button>
-  <span id="filterPill" class="pill" style="display:none;margin-left:4px;"></span>
+  <span id="filterPill" class="pill" style="margin-left:4px;"></span>
   <span id="globalLastSignal" style="margin-left:12px;font-size:12px;font-weight:700;color:#2563eb;"></span>
   <div id="dlGroup" class="export hidden" style="margin-left:auto;gap:6px;">
     <button onclick="autoLoadFromGitHubPages()" style="padding:6px 13px;font-size:12px;background:#0891b2;">↻ Refresh</button>
@@ -672,6 +672,7 @@ function applyDateRange(){
     filterPill.style.color='#2563eb';
     filterPill.style.borderColor='#2563eb';
     filterPill.style.background='rgba(37, 99, 235, 0.1)';
+    filterPill.style.display='inline-block';
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
     renderAll();
     showToast(`✅ Filter Applied: ${fromDate} to ${toDate}`, 'success');
@@ -687,10 +688,11 @@ function resetDateRange(){
     toDateGlobal=null;
     dateRangeActive=false;
     const filterPill=document.getElementById('filterPill');
-    filterPill.textContent=selectedDate?`Showing BuyDate <= ${selectedDate}`:'';
+    filterPill.textContent='';
     filterPill.style.color='#2563eb';
     filterPill.style.borderColor='#cbd5e1';
     filterPill.style.background='transparent';
+    filterPill.style.display='none';
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
     renderAll();
     showToast('✅ Filter Reset', 'info');
