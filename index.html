@@ -506,21 +506,16 @@ async function autoLoadFromGitHubPages() {
                     if (k==='LOW_PRICE')  lowPrice   = parseNum(row[key]);
                     if (k==='CLOSE_PRICE')closePrice = parseNum(row[key]);
                 }
-                const dateKey = parseDateFromExcel(dateVal);
-                if (symbol && dateKey && (prevClose || openPrice || closePrice)) {
+                if (symbol && dateVal) {
                     if (!stockHistoryData[symbol]) stockHistoryData[symbol] = {};
-                    const entry = {
+                    stockHistoryData[symbol][dateVal] = {
+                        date: dateVal,
                         prev_close: prevClose,
-                        open:       openPrice,
-                        high:       highPrice,
-                        low:        lowPrice,
-                        close:      closePrice
+                        open: openPrice,
+                        high: highPrice,
+                        low: lowPrice,
+                        close: closePrice
                     };
-                    stockHistoryData[symbol][dateKey] = entry;
-                    // Also store by raw dateVal in case format differs
-                    if (dateVal && String(dateVal) !== dateKey) {
-                        stockHistoryData[symbol][String(dateVal).slice(0,10)] = entry;
-                    }
                 }
             });
         });
@@ -833,22 +828,16 @@ els.file.addEventListener('change',(e)=>{
                         if (trimmedKey === 'CLOSE_PRICE') closePrice = parseNum(row[key]);
                     }
 
-                    const dateKey = parseDateFromExcel(dateVal);
-
-                    if(symbol && dateKey && (prevClose || openPrice || closePrice)) {
+                    if(symbol && dateVal) {
                         if(!stockHistoryData[symbol]) stockHistoryData[symbol] = {};
-                        const entry = {
+                        stockHistoryData[symbol][dateVal] = {
+                            date: dateVal,
                             prev_close: prevClose,
                             open: openPrice,
                             high: highPrice,
                             low: lowPrice,
                             close: closePrice
                         };
-                        stockHistoryData[symbol][dateKey] = entry;
-                        // Also store by raw dateVal in case format differs
-                        if (dateVal && String(dateVal) !== dateKey) {
-                            stockHistoryData[symbol][String(dateVal).slice(0,10)] = entry;
-                        }
                     }
                 });
             });
