@@ -192,7 +192,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
 <div class="container">
 
-<div class="cstrip" id="dateBox" style="">
+<div class="cstrip" id="dateBox" style="display:none;">
   <span class="slbl">Signal Date:</span>
   <select id="dateSelect" onchange="onDateChange(this.value)" style="min-width:155px;"></select>
   <span class="slbl" style="margin-left:6px;">Range:</span>
@@ -201,8 +201,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
   <input type="date" id="toDate">
   <button onclick="applyDateRange()" style="padding:6px 13px;font-size:12px;">Apply</button>
   <button onclick="resetDateRange()" style="padding:6px 13px;font-size:12px;background:#64748b;">Reset</button>
-  <span id="filterPill" class="pill" style="margin-left:4px;"></span>
-  <span id="globalLastSignal" style="margin-left:12px;font-size:12px;font-weight:700;color:#2563eb;"></span>
+  <span id="filterPill" class="pill" style="display:none;margin-left:4px;"></span>
   <div id="dlGroup" class="export hidden" style="margin-left:auto;gap:6px;">
     <button onclick="autoLoadFromGitHubPages()" style="padding:6px 13px;font-size:12px;background:#0891b2;">↻ Refresh</button>
     <button onclick="exportAll()" style="padding:6px 13px;font-size:12px;">Export Excel</button>
@@ -251,14 +250,6 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
 <div id="calls" class="card hidden">
   <div class="badges" id="callsBadges"></div>
-  <div style="margin-bottom:10px;">
-    <label style="font-weight:700;color:var(--blue2);font-size:12px;">Filter Status:</label>
-    <select id="callsStatusFilter" onchange="renderCalls()" style="min-width:140px;">
-      <option value="all">All</option>
-      <option value="fresh">Fresh Call Only</option>
-      <option value="open">Open Call Only</option>
-    </select>
-  </div>
   <div class="table-area" id="callsTable"></div>
   <div class="pager" id="callsPager"></div>
 </div>
@@ -351,9 +342,8 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;">
     <label style="font-weight:700;color:var(--blue2);font-size:12px;">Days to Force Exit:</label>
     <select id="forceExitFilter" onchange="renderForceExit()" style="min-width:130px;">
-      <option value="all">All</option>
-      <option value="warning">⚠️ Warning Only (35-44 days)</option>
-      <option value="critical">🔴 Critical Only (45+ days)</option>
+      <option value="all">All</option><option value="5">Within 5 days</option>
+      <option value="10">Within 10 days</option><option value="15">Within 15 days</option><option value="20">Within 20 days</option>
     </select>
     <span id="forceExitPill" class="pill" style="display:none;"></span>
   </div>
@@ -410,17 +400,12 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
 <div id="stockDetailView" style="display:none;">
   <div id="sdCard">
-    <div id="sdHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;">
-      <div>
-        <h3 id="sdTitle" style="margin:0;color:var(--navy);font-size:17px;font-weight:800;"></h3>
-        <div id="sdSubtitle" style="font-size:12px;color:var(--text3);margin-top:3px;"></div>
-      </div>
+    <div id="sdHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;">
+      <h3 id="sdTitle" style="margin:0;color:var(--navy);font-size:17px;font-weight:800;"></h3>
       <div id="sdExportButtons" style="display:flex;gap:7px;"></div>
-      <button onclick="closeStockDetail()" style="background:#64748b;padding:6px 13px;font-size:12px;">✕ Close</button>
+      <button onclick="document.getElementById('stockDetailView').style.display='none'" style="background:#64748b;padding:6px 13px;font-size:12px;">✕ Close</button>
     </div>
-    <div id="sdBadges" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
     <div id="sdContent"></div>
-    <div class="pager" id="sdPager"></div>
   </div>
 </div>
 
@@ -492,7 +477,7 @@ async function autoLoadFromGitHubPages() {
         wb.SheetNames.forEach((sheetName, index) => {
             if (sheetName.toLowerCase() === 'pickse' || index === 0) return;
             const histSheet = wb.Sheets[sheetName];
-            const histRows  = XLSX.utils.sheet_to_json(histSheet, {raw:false, dateNF:'yyyy-mm-dd', defval:''});
+            const histRows  = XLSX.utils.sheet_to_json(histSheet, {raw:false, defval:''});
             histRows.forEach(row => {
                 let symbol=null, dateVal=null, prevClose=null, openPrice=null,
                     highPrice=null, lowPrice=null, closePrice=null;
@@ -508,14 +493,7 @@ async function autoLoadFromGitHubPages() {
                 }
                 if (symbol && dateVal) {
                     if (!stockHistoryData[symbol]) stockHistoryData[symbol] = {};
-                    stockHistoryData[symbol][dateVal] = {
-                        date: dateVal,
-                        prev_close: prevClose,
-                        open: openPrice,
-                        high: highPrice,
-                        low: lowPrice,
-                        close: closePrice
-                    };
+                    stockHistoryData[symbol][dateVal] = {date:dateVal,prev_close:prevClose,open:openPrice,high:highPrice,low:lowPrice,close:closePrice};
                 }
             });
         });
@@ -592,47 +570,38 @@ function fmtDateLocalFromDate(d){return`${d.getFullYear()}-${pad2(d.getMonth()+1
 
 function parseDateFromExcel(dateValue) {
     if(!dateValue) return null;
-
-    // JS Date object (from cellDates:true)
-    if(dateValue instanceof Date) {
-        if(!isNaN(dateValue)) return fmtDateLocalFromDate(dateValue);
-        return null;
-    }
-
+    
+    // If it's a string like "01-Jan-2025"
     if(typeof dateValue === 'string') {
         const str = dateValue.trim();
-        if(!str) return null;
-
-        // YYYY-MM-DD
-        if(/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0,10);
-
-        // DD-MM-YYYY
-        const m1 = str.match(/^(\d{1,2})-(\d{2})-(\d{4})$/);
-        if(m1) return m1[3]+'-'+m1[2].padStart(2,'0')+'-'+m1[1].padStart(2,'0');
-
-        // DD-MMM-YYYY (e.g. 07-Apr-2026)
-        const m2 = str.match(/^(\d{1,2})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{4})$/i);
-        if(m2) {
-            const mn = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',
-                        jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
-            return m2[3]+'-'+mn[m2[2].toLowerCase()]+'-'+m2[1].padStart(2,'0');
+        
+        // Try DD-MMM-YYYY format (01-Jan-2025)
+        const match = str.match(/^(\d{1,2})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{4})$/i);
+        if(match) {
+            const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+            const day = parseInt(match[1], 10);
+            const month = months[match[2].toLowerCase()];
+            const year = parseInt(match[3], 10);
+            const d = new Date(year, month, day);
+            return fmtDateLocalFromDate(d);
         }
-
-        // MM/DD/YYYY
-        const m3 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-        if(m3) return m3[3]+'-'+m3[1].padStart(2,'0')+'-'+m3[2].padStart(2,'0');
-
+        
+        // Try YYYY-MM-DD format
+        if(/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0,10);
+        
+        // Try parsing as date string
         const d = new Date(str);
         if(!isNaN(d)) return fmtDateLocalFromDate(d);
-        return str.length >= 10 ? str.slice(0,10) : null;
+        
+        return str.slice(0,10);
     }
-
-    // Excel serial number
-    if(typeof dateValue === 'number') {
-        const d = new Date(Math.round((dateValue - 25569) * 86400 * 1000));
+    
+    // If it's a number (Excel serial date)
+    try {
+        const d = new Date(dateValue);
         if(!isNaN(d)) return fmtDateLocalFromDate(d);
-    }
-
+    } catch(e) {}
+    
     return null;
 }
 
@@ -687,7 +656,6 @@ function applyDateRange(){
     filterPill.style.color='#2563eb';
     filterPill.style.borderColor='#2563eb';
     filterPill.style.background='rgba(37, 99, 235, 0.1)';
-    filterPill.style.display='inline-block';
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
     renderAll();
     showToast(`✅ Filter Applied: ${fromDate} to ${toDate}`, 'success');
@@ -703,11 +671,10 @@ function resetDateRange(){
     toDateGlobal=null;
     dateRangeActive=false;
     const filterPill=document.getElementById('filterPill');
-    filterPill.textContent='';
+    filterPill.textContent=selectedDate?`Showing BuyDate <= ${selectedDate}`:'';
     filterPill.style.color='#2563eb';
     filterPill.style.borderColor='#cbd5e1';
     filterPill.style.background='transparent';
-    filterPill.style.display='none';
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
     renderAll();
     showToast('✅ Filter Reset', 'info');
@@ -727,28 +694,13 @@ function filteredRows(){
 
 // Filter Functions
 function filteredCalls() {
-    // Fresh Call = Invalid + Result "Invalid: No data on signal date" (holiday/missing — still actionable)
-    // Open Call  = Pending (buy not triggered yet, within 30-day window)
-    // Expired and other Invalid scenarios NOT shown in Calls tab
-    const callsFilter = document.getElementById('callsStatusFilter');
-    const filterVal   = callsFilter ? callsFilter.value : 'all';
-    return allRows.filter(r => {
+    // BTST calls = Pending (fresh/not triggered) + Expired (missed trigger window)
+    // Invalid rows are excluded (no data / suspended / delisted)
+    return filteredRows().filter(r => {
         const o = String(r['Order'] || '').trim().toLowerCase();
-        const isFreshCall = o === 'invalid' && String(r['Result'] || '').trim() === 'Invalid: No data on signal date';
-        const isOpenCall  = o === 'pending';
-        if (!isFreshCall && !isOpenCall) return false;
-        if (filterVal === 'fresh' && !isFreshCall) return false;
-        if (filterVal === 'open'  && !isOpenCall)  return false;
-        // Use global date range filter (same as all other tabs)
-        if (dateRangeActive && fromDateGlobal && toDateGlobal) {
-            const d = predDateKey(r);
-            if (d && (d < fromDateGlobal || d > toDateGlobal)) return false;
-        }
-        return true;
+        return o === 'pending' || o === 'expired';
     });
 }
-
-
 
 function filteredExpired(){return filteredRows().filter(r=>isExpired(r))}
 function filteredHolding(){return filteredRows().filter(r=>statusNorm(r)==='open'&&!isClosed(r))}
@@ -801,7 +753,7 @@ els.file.addEventListener('change',(e)=>{
                 if(sheetName.toLowerCase() === 'pickse' || index === 0) return; 
                 
                 const histSheet = wb.Sheets[sheetName];
-                const histRows = XLSX.utils.sheet_to_json(histSheet, {raw: false, dateNF:'yyyy-mm-dd', defval: ''});
+                const histRows = XLSX.utils.sheet_to_json(histSheet, {raw: false, defval: ''});
                 
                 console.log(`📅 Loading ${sheetName}: ${histRows.length} rows`);
                 
@@ -828,10 +780,12 @@ els.file.addEventListener('change',(e)=>{
                         if (trimmedKey === 'CLOSE_PRICE') closePrice = parseNum(row[key]);
                     }
 
-                    if(symbol && dateVal) {
+                    const dateKey = parseDateFromExcel(dateVal);
+                    
+                    if(symbol && dateKey && (prevClose || openPrice || closePrice)) {
                         if(!stockHistoryData[symbol]) stockHistoryData[symbol] = {};
-                        stockHistoryData[symbol][dateVal] = {
-                            date: dateVal,
+                        
+                        stockHistoryData[symbol][dateKey] = {
                             prev_close: prevClose,
                             open: openPrice,
                             high: highPrice,
@@ -866,22 +820,38 @@ function populateDates(){
     for(const r of allRows){if(isInvalid(r))continue;const d=predDateKey(r);if(d)set.add(d)}
     const dates=Array.from(set).sort((a,b)=>new Date(b+'T00:00:00')-new Date(a+'T00:00:00'));
     if(!dates.length){
+        els.dateBox.style.display='';
         els.dateBox.classList.remove('hidden');
         els.tabs.classList.add('hidden');
         setLoading(false);
         return
     }
     selectedDate=dates[0];
+    els.dateSelect.innerHTML='';
+    dates.forEach(d=>{
+        const opt=document.createElement('option');
+        opt.value=d; opt.textContent=d;
+        els.dateSelect.appendChild(opt);
+    });
+    els.dateSelect.value=selectedDate;
+    els.dateBox.style.display='';
     els.dateBox.classList.remove('hidden');
-    els.dateBox.style.display='flex';
     els.tabs.classList.remove('hidden');
+    els.dlGroup.classList.remove('hidden');
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
-    // Show Last Signal Date in global bar
-    const lastSigEl = document.getElementById('globalLastSignal');
-    if(lastSigEl && dates.length){
-        lastSigEl.textContent = '📅 Last Signal: ' + dates[0];
-    }
     setLoading(false)
+}
+
+function onDateChange(dateStr){
+    if(!dateStr) return;
+    selectedDate=dateStr;
+    dateRangeActive=false;
+    fromDateGlobal=null;
+    toDateGlobal=null;
+    const filterPill=document.getElementById('filterPill');
+    if(filterPill){filterPill.textContent='';filterPill.style.display='none';}
+    Object.keys(pageState).forEach(k=>pageState[k].page=1);
+    renderAll();
 }
 
 function switchTab(name){
@@ -998,30 +968,16 @@ function populateTradeHistoryData(divElement, stock, startDateStr, endDateStr) {
     let html = `<div style="text-align:right; margin-bottom:5px;"><button class="btn-sm" onclick="this.parentElement.parentElement.classList.add('hidden')" style="background:#94a3b8;">Hide</button></div>`;
     html += `<table class="history-table"><thead><tr><th>Date</th><th>Prev.Close</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr></thead><tbody>`;
 
-    // Gather valid data points — use SoldOHLCV from Pickse for sold date
+    // Gather valid data points first to calculate Max/Min for the range
     const dataPoints = [];
-    const trRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
-    const isSoldTr = trRow && isClosed(trRow);
-    let soldOHLCV = null;
-    if(isSoldTr && endDateStr) {
-        const sd = {
-            prev_close: parseNum(trRow['SoldPrevClose']) || 0,
-            open:       parseNum(trRow['SoldOpen'])      || 0,
-            high:       parseNum(trRow['SoldHigh'])      || 0,
-            low:        parseNum(trRow['SoldLow'])       || 0,
-            close:      parseNum(trRow['SoldClose'])     || 0
-        };
-        if(sd.close > 0 || sd.high > 0) soldOHLCV = sd;
-    }
-
+    
     dates.forEach(d => {
-        const isSoldDay = isSoldTr && d === endDateStr;
-        if(isSoldDay && soldOHLCV) {
-            dataPoints.push({date: d, data: soldOHLCV});
-        } else if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
-            dataPoints.push({date: d, data: stockHistoryData[stock][d]});
-        } else if(isSoldDay) {
-            dataPoints.push({date: d, data: {prev_close:0, open:0, high:0, low:0, close:0}});
+        if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
+            const stockData = stockHistoryData[stock][d];
+            dataPoints.push({
+                date: d,
+                data: stockData
+            });
         }
     });
 
@@ -1073,7 +1029,7 @@ function renderTradeHistory(){
     const container=document.getElementById('tradeHistoryContent');
     const summaryEl=document.getElementById('tradeHistorySummary');
     if(!container)return;
-    const filterVal=document.getElementById('thStatusFilter')?.value||'all';
+    const filterVal=document.getElementById('tradeHistoryFilter')?.value||'all';
     
     const rows=filteredRows().filter(r=>{
         const s=String(r['Status']||'').trim().toLowerCase();
@@ -1255,9 +1211,11 @@ function renderCalls(){
         return;
     }
     
-    const freshCount = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='invalid'&&String(r['Result']||'').trim()==='Invalid: No data on signal date').length;
-    const openCount  = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
-    badgeEl.innerHTML=`<span class="badge">Total: ${total}</span><span class="badge green">Fresh Call: ${freshCount}</span><span class="badge" style="background:#f59e0b;color:#fff;">Open Call: ${openCount}</span>`;
+    const freshCount = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
+    const openCount = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='executed'&&String(r['Status']||'').trim().toLowerCase()==='open').length;
+    const expiredCount2 = rows.filter(r=>isExpiredRow(r)).length;
+    const invalidCount2  = allRows.filter(r=>isInvalid(r)).length;
+    badgeEl.innerHTML=`<span class="badge">Total: ${total}</span><span class="badge green">Fresh Call: ${freshCount}</span><span class="badge" style="background:#f59e0b;color:#fff;">Open: ${openCount}</span><span class="badge" style="background:#94a3b8;color:#fff;">Expired: ${expiredCount2}</span><span class="badge" style="background:#ef4444;color:#fff;">Invalid: ${invalidCount2}</span>`;
 
     let html='<table><thead><tr><th>Date</th><th>Stock</th><th>1D%</th><th>5D%</th><th>Buy Price</th><th>LTP</th><th>Target</th><th>SL</th><th>Status</th></tr></thead><tbody>';
     for(const r of slice){
@@ -1265,11 +1223,10 @@ function renderCalls(){
         if(buyPrice<=0)continue;
         const ltp=parseNum(r['RecentLTP']||buyPrice);
         const orderStatus=String(r['Order']||'').trim().toLowerCase();
-        const resultVal=String(r['Result']||'').trim();
-        const isFresh    = orderStatus==='invalid' && resultVal==='Invalid: No data on signal date';
-        const isOpenCall = orderStatus==='pending';
-        const statusBtnClass = isFresh ? 'fresh-call' : 'open-call';
-        const statusText     = isFresh ? 'Fresh Call'  : 'Open Call';
+        const isFresh   = orderStatus==='pending';
+        const isExpired2 = orderStatus==='expired';
+        const statusBtnClass = isFresh ? 'fresh-call' : (isExpired2 ? 'expired-call' : 'open-call');
+        const statusText     = isFresh ? 'Fresh Call'  : (isExpired2 ? 'Expired'      : 'Open Call');
         html+=`<tr><td>${toDateStr(r['BuyDate'])}</td><td>${r['StockName']||''}</td><td class="${colorCls(r['1DChange%'])}">${fmtPct(r['1DChange%'])}</td><td class="${colorCls(r['5DLow%'])}">${fmtPct(r['5DLow%'])}</td><td>${fmtCur(buyPrice)}</td><td>${fmtCur(ltp)}</td><td class="green">${fmtCur(parseNum(r['TargetPrice'])||buyPrice*1.10)}</td><td class="red">${fmtCur(parseNum(r['StoplossPrice'])||buyPrice*0.80)}</td><td><button class="status-btn ${statusBtnClass}">${statusText}</button></td></tr>`
     }
     html+='</tbody></table>';
@@ -1483,22 +1440,19 @@ function renderStockHistory(){
     const container = document.getElementById('stockHistoryTable');
     if(!container) return;
     
-    const searchQ  = (document.getElementById('shSearch')?.value  || '').trim().toLowerCase();
-    const fromDate = document.getElementById('shFromDate')?.value || '';
-    const toDate   = document.getElementById('shToDate')?.value   || '';
+    const filterVal = document.getElementById('stockHistoryFilter')?.value || 'all';
 
     let rows = filteredRows().filter(r => {
         const s = String(r['Status']||'').trim().toLowerCase();
         const o = String(r['Order']||'').trim().toLowerCase();
         if(s === 'expired') return false;
         if(o === 'invalid' || o === 'pending') return false;
+
         if(!boughtDateKey(r)) return false;
-        // Search filter
-        if(searchQ && !String(r['StockName']||'').toLowerCase().includes(searchQ)) return false;
-        // Date range filter on BoughtDate
-        const bd = boughtDateKey(r);
-        if(fromDate && bd && bd < fromDate) return false;
-        if(toDate   && bd && bd > toDate)   return false;
+
+        if(filterVal === 'holding' && isClosed(r)) return false;
+        if(filterVal === 'closed' && !isClosed(r)) return false;
+
         return true;
     }).sort((a,b)=>(boughtDateKey(b)>boughtDateKey(a)?1:-1));
 
@@ -1605,51 +1559,20 @@ function renderStockHistory(){
     container.innerHTML = html;
 }
 
-/* STOCK HISTORY FILTER FUNCTIONS */
-
-function applyStockHistoryFilter() {
-    const fromDate = document.getElementById('shFromDate')?.value || '';
-    const toDate   = document.getElementById('shToDate')?.value   || '';
-    if (fromDate && toDate && new Date(fromDate) > new Date(toDate)) {
-        alert('From Date cannot be greater than To Date');
-        return;
-    }
-    renderStockHistory();
-}
-
-function resetStockHistoryFilter() {
-    const f = document.getElementById('shFromDate');
-    const t = document.getElementById('shToDate');
-    const s = document.getElementById('shSearch');
-    if (f) f.value = '';
-    if (t) t.value = '';
-    if (s) s.value = '';
-    renderStockHistory();
-}
-
 /* NEW FUNCTIONS FOR SEPARATE STOCK HISTORY PAGE */
 
 function openStockDetail(stock, startDateStr, endDateStr) {
     const mainContainer = document.querySelector('.container');
     const detailView = document.getElementById('stockDetailView');
-
+    
     // Switch Views
-    if (mainContainer) mainContainer.style.display = 'none';
-    detailView.style.display = 'flex';
-
+    mainContainer.classList.add('hidden');
+    detailView.classList.add('active');
+    
     // Populate Header
     document.getElementById('sdTitle').textContent = `📊 Stock History: ${stock}`;
-    const sub = document.getElementById('sdSubtitle');
-    if (sub) sub.textContent = `From: ${startDateStr}  To: ${endDateStr}`;
-
-    // Clear previous content
-    const sdBadges   = document.getElementById('sdBadges');
-    const sdContent  = document.getElementById('sdContent');
-    const sdPager    = document.getElementById('sdPager');
-    if (sdBadges)  sdBadges.innerHTML  = '';
-    if (sdContent) sdContent.innerHTML = '<div style="text-align:center;padding:30px;color:#64748b;">Loading...</div>';
-    if (sdPager)   sdPager.innerHTML   = '';
-
+    document.getElementById('sdSubtitle').textContent = `From: ${startDateStr} To: ${endDateStr}`;
+    
     // Populate Page Content
     renderFullStockHistory(stock, startDateStr, endDateStr);
 }
@@ -1657,9 +1580,9 @@ function openStockDetail(stock, startDateStr, endDateStr) {
 function closeStockDetail() {
     const mainContainer = document.querySelector('.container');
     const detailView = document.getElementById('stockDetailView');
-
-    detailView.style.display = 'none';
-    if (mainContainer) mainContainer.style.display = '';
+    
+    detailView.classList.remove('active');
+    mainContainer.classList.remove('hidden');
 }
 
 function renderFullStockHistory(stock, startDateStr, endDateStr) {
@@ -1675,52 +1598,36 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
     }
 
     const dataPoints = [];
-
-    // Find trade row to get sold OHLCV columns
-    const tradeRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
-    const isSoldTrade = tradeRow && isClosed(tradeRow);
-
-    // Build sold date OHLCV from Pickse columns (SoldPrevClose/SoldOpen etc.)
-    let soldDateOHLCV = null;
-    if(isSoldTrade && endDateStr) {
-        const sd = {
-            prev_close: parseNum(tradeRow['SoldPrevClose']) || 0,
-            open:       parseNum(tradeRow['SoldOpen'])      || 0,
-            high:       parseNum(tradeRow['SoldHigh'])      || 0,
-            low:        parseNum(tradeRow['SoldLow'])       || 0,
-            close:      parseNum(tradeRow['SoldClose'])     || 0
-        };
-        if(sd.close > 0 || sd.high > 0 || sd.low > 0) soldDateOHLCV = sd;
-    }
-
     dates.forEach(d => {
-        const isSoldDay = isSoldTrade && d === endDateStr;
-        // For sold date: prefer Pickse SoldOHLCV columns, fallback to stockHistoryData
-        if(isSoldDay && soldDateOHLCV) {
-            dataPoints.push({date: d, data: soldDateOHLCV, isSold: true});
-        } else if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
-            dataPoints.push({date: d, data: stockHistoryData[stock][d], isSold: isSoldDay});
-        } else if(isSoldDay && !soldDateOHLCV) {
-            // Sold date has no data at all — still show as sold marker with zeros
-            dataPoints.push({date: d, data: {prev_close:0, open:0, high:0, low:0, close:0}, isSold: true});
+        if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
+            dataPoints.push({date: d, data: stockHistoryData[stock][d], isSold: false});
         }
     });
 
-    // If sold date not in date range (e.g. same day buy+sell edge case), append it
-    if(isSoldTrade && endDateStr && !dates.includes(endDateStr) && soldDateOHLCV) {
-        dataPoints.push({date: endDateStr, data: soldDateOHLCV, isSold: true});
+    const tradeRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
+    if(tradeRow && isClosed(tradeRow) && endDateStr) {
+        const soldData = {
+            prev_close: parseNum(tradeRow['SoldPrevClose']) || 0,
+            open: parseNum(tradeRow['SoldOpen']) || 0,
+            high: parseNum(tradeRow['SoldHigh']) || 0,
+            low: parseNum(tradeRow['SoldLow']) || 0,
+            close: parseNum(tradeRow['SoldClose']) || 0
+        };
+        if(soldData.high > 0 || soldData.low > 0 || soldData.close > 0) {
+            dataPoints.push({date: endDateStr, data: soldData, isSold: true});
+        }
     }
 
-    const sdContent      = document.getElementById('sdContent');
-    const badgesEl       = document.getElementById('sdBadges');
-    const exportButtonsEl= document.getElementById('sdExportButtons');
-    const pagerEl        = document.getElementById('sdPager');
+    const tableBody = document.getElementById('sdTableBody');
+    const badgesEl = document.getElementById('sdBadges');
+    const exportButtonsEl = document.getElementById('sdExportButtons');
+    const pagerEl = document.getElementById('sdPager');
 
     if (dataPoints.length === 0) {
-        if (badgesEl)        badgesEl.innerHTML       = '';
-        if (exportButtonsEl) exportButtonsEl.innerHTML= '';
-        if (sdContent)       sdContent.innerHTML      = '<div style="text-align:center; color:#ef4444; font-weight:bold; padding:40px;">No historical data found for this stock/date range.<br><small style=\"color:#64748b;font-weight:normal;\">BuyHistory sheet may not have data for this stock.</small></div>';
-        if (pagerEl)         pagerEl.innerHTML        = '';
+        badgesEl.innerHTML = '';
+        exportButtonsEl.innerHTML = '';
+        tableBody.innerHTML = '<div style="text-align:center; color:#ef4444; font-weight:bold; padding:40px;">No historical data found for this stock/date range.</div>';
+        pagerEl.innerHTML = '';
         return;
     }
 
@@ -1839,7 +1746,7 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
     });
 
     html += `</tbody></table>`;
-    if (sdContent) sdContent.innerHTML = html;
+    tableBody.innerHTML = html;
     
     // RENDER HORIZONTAL BADGES BELOW TABLE (shown on every page)
     badgesEl.innerHTML = `
@@ -2015,56 +1922,15 @@ function renderAllTablesOnly(){
     renderAvgBuyTrigger();
     renderSellTrigger();
     renderAvgHistory();
-    renderForceExit();
     if(!document.getElementById('stockHistory').classList.contains('hidden')) renderStockHistory();
+    if(!document.getElementById('forceExit').classList.contains('hidden')) renderForceExit();
 }
 
 function renderAll(){ 
+    renderForceExit();
     renderOverview();
     renderAllTablesOnly();
-    renderPerformance();
-}
-
-/* UTILITY FUNCTIONS */
-
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${message}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s forwards';
-        toast.addEventListener('animationend', () => {
-            if (container.contains(toast)) container.removeChild(toast);
-        });
-    }, 3000);
-}
-
-function exportAll() {
-    const rows = filteredRows();
-    if (!rows.length) { showToast('No data to export', 'error'); return; }
-    const out = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(out, XLSX.utils.json_to_sheet(rows), 'Pickse');
-    XLSX.writeFile(out, `Dashboard_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
-    showToast('✅ Excel exported!', 'success');
-}
-
-function exportCSV() {
-    const rows = filteredRows();
-    if (!rows.length) { showToast('No data to export', 'error'); return; }
-    const headers = Object.keys(rows[0]);
-    const lines = rows.map(r => headers.map(h => {
-        const v = String(r[h] == null ? '' : r[h]).replace(/"/g, '""');
-        return (v.indexOf(',') >= 0 || v.indexOf('"') >= 0) ? '"' + v + '"' : v;
-    }).join(','));
-    const csv = [headers.join(',')].concat(lines).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'Dashboard_Export_' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click();
-    showToast('CSV exported!', 'success');
+    renderPerformance()
 }
 
 /* PART 12: EXPORT FUNCTIONS (REVISED FOR FIXED SIZE & DATA INTEGRITY) */
