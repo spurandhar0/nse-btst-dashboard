@@ -202,6 +202,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
   <button onclick="applyDateRange()" style="padding:6px 13px;font-size:12px;">Apply</button>
   <button onclick="resetDateRange()" style="padding:6px 13px;font-size:12px;background:#64748b;">Reset</button>
   <span id="filterPill" class="pill" style="display:none;margin-left:4px;"></span>
+  <span id="globalLastSignal" style="margin-left:12px;font-size:12px;font-weight:700;color:#2563eb;"></span>
   <div id="dlGroup" class="export hidden" style="margin-left:auto;gap:6px;">
     <button onclick="autoLoadFromGitHubPages()" style="padding:6px 13px;font-size:12px;background:#0891b2;">↻ Refresh</button>
     <button onclick="exportAll()" style="padding:6px 13px;font-size:12px;">Export Excel</button>
@@ -250,28 +251,14 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
 <div id="calls" class="card hidden">
   <div class="badges" id="callsBadges"></div>
-  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:10px;">
-    <div>
-      <label style="font-weight:700;color:var(--blue2);font-size:12px;">Filter Status:</label>
-      <select id="callsStatusFilter" onchange="renderCalls()" style="min-width:140px;">
-        <option value="all">All</option>
-        <option value="fresh">Fresh Call Only</option>
-        <option value="open">Open Call Only</option>
-      </select>
-    </div>
-    <div>
-      <label style="font-weight:700;color:var(--blue2);font-size:12px;">From Date:</label>
-      <input type="date" id="callsFromDateGlobal" onchange="applyGlobalDateFromCalls()" style="padding:5px;border-radius:6px;border:1px solid #cbd5e1;">
-    </div>
-    <div>
-      <label style="font-weight:700;color:var(--blue2);font-size:12px;">To Date:</label>
-      <input type="date" id="callsToDateGlobal" onchange="applyGlobalDateFromCalls()" style="padding:5px;border-radius:6px;border:1px solid #cbd5e1;">
-    </div>
-    <div>
-      <button onclick="resetGlobalDateFromCalls()" style="padding:5px 12px;border-radius:6px;background:#64748b;color:#fff;border:none;cursor:pointer;font-size:12px;">Clear Dates</button>
-    </div>
+  <div style="margin-bottom:10px;">
+    <label style="font-weight:700;color:var(--blue2);font-size:12px;">Filter Status:</label>
+    <select id="callsStatusFilter" onchange="renderCalls()" style="min-width:140px;">
+      <option value="all">All</option>
+      <option value="fresh">Fresh Call Only</option>
+      <option value="open">Open Call Only</option>
+    </select>
   </div>
-  <div id="callsLastSignal" style="margin-bottom:8px;font-size:12px;color:var(--text3);"></div>
   <div class="table-area" id="callsTable"></div>
   <div class="pager" id="callsPager"></div>
 </div>
@@ -744,45 +731,7 @@ function filteredCalls() {
     });
 }
 
-// Apply global date range from Calls tab inputs — affects ALL tabs
-function applyGlobalDateFromCalls() {
-    const fromVal = document.getElementById('callsFromDateGlobal').value;
-    const toVal   = document.getElementById('callsToDateGlobal').value;
-    if (!fromVal || !toVal) return;
-    if (new Date(fromVal) > new Date(toVal)) { alert('From Date cannot be greater than To Date'); return; }
-    // Sync to global date inputs too
-    const gFrom = document.getElementById('fromDate');
-    const gTo   = document.getElementById('toDate');
-    if (gFrom) gFrom.value = fromVal;
-    if (gTo)   gTo.value   = toVal;
-    fromDateGlobal  = fromVal;
-    toDateGlobal    = toVal;
-    dateRangeActive = true;
-    const filterPill = document.getElementById('filterPill');
-    if (filterPill) { filterPill.textContent = `📅 ${fromVal} to ${toVal}`; filterPill.style.color='#2563eb'; }
-    Object.keys(pageState).forEach(k => pageState[k].page = 1);
-    renderAll();
-}
 
-// Reset global date range from Calls tab — affects ALL tabs
-function resetGlobalDateFromCalls() {
-    const f = document.getElementById('callsFromDateGlobal');
-    const t = document.getElementById('callsToDateGlobal');
-    if (f) f.value = '';
-    if (t) t.value = '';
-    fromDateGlobal  = null;
-    toDateGlobal    = null;
-    dateRangeActive = false;
-    const filterPill = document.getElementById('filterPill');
-    if (filterPill) { filterPill.textContent = ''; }
-    // Also reset global inputs
-    const gFrom = document.getElementById('fromDate');
-    const gTo   = document.getElementById('toDate');
-    if (gFrom) gFrom.value = '';
-    if (gTo)   gTo.value   = '';
-    Object.keys(pageState).forEach(k => pageState[k].page = 1);
-    renderAll();
-}
 
 function filteredExpired(){return filteredRows().filter(r=>isExpired(r))}
 function filteredHolding(){return filteredRows().filter(r=>statusNorm(r)==='open'&&!isClosed(r))}
@@ -911,6 +860,11 @@ function populateDates(){
     els.dateBox.classList.remove('hidden');
     els.tabs.classList.remove('hidden');
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
+    // Show Last Signal Date in global bar
+    const lastSigEl = document.getElementById('globalLastSignal');
+    if(lastSigEl && dates.length){
+        lastSigEl.textContent = '📅 Last Signal: ' + dates[0];
+    }
     setLoading(false)
 }
 
@@ -1273,11 +1227,6 @@ function renderCalls(){
     
     const freshCount = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='invalid'&&String(r['Result']||'').trim()==='Invalid: No data on signal date').length;
     const openCount  = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
-    // Last signal date — latest BuyDate among all calls (before date filter)
-    const allCallDates = allRows.filter(r=>{const o=String(r['Order']||'').trim().toLowerCase();return o==='pending'||(o==='invalid'&&String(r['Result']||'').trim()==='Invalid: No data on signal date');}).map(r=>predDateKey(r)).filter(Boolean).sort();
-    const lastSignalDate = allCallDates.length ? allCallDates[allCallDates.length-1] : null;
-    const lastSignalEl = document.getElementById('callsLastSignal');
-    if(lastSignalEl) lastSignalEl.innerHTML = lastSignalDate ? `📅 <b>Last Signal Date:</b> ${lastSignalDate}` : '';
     badgeEl.innerHTML=`<span class="badge">Total: ${total}</span><span class="badge green">Fresh Call: ${freshCount}</span><span class="badge" style="background:#f59e0b;color:#fff;">Open Call: ${openCount}</span>`;
 
     let html='<table><thead><tr><th>Date</th><th>Stock</th><th>1D%</th><th>5D%</th><th>Buy Price</th><th>LTP</th><th>Target</th><th>SL</th><th>Status</th></tr></thead><tbody>';
