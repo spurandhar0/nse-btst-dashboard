@@ -1002,16 +1002,30 @@ function populateTradeHistoryData(divElement, stock, startDateStr, endDateStr) {
     let html = `<div style="text-align:right; margin-bottom:5px;"><button class="btn-sm" onclick="this.parentElement.parentElement.classList.add('hidden')" style="background:#94a3b8;">Hide</button></div>`;
     html += `<table class="history-table"><thead><tr><th>Date</th><th>Prev.Close</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr></thead><tbody>`;
 
-    // Gather valid data points first to calculate Max/Min for the range
+    // Gather valid data points — use SoldOHLCV from Pickse for sold date
     const dataPoints = [];
-    
+    const trRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
+    const isSoldTr = trRow && isClosed(trRow);
+    let soldOHLCV = null;
+    if(isSoldTr && endDateStr) {
+        const sd = {
+            prev_close: parseNum(trRow['SoldPrevClose']) || 0,
+            open:       parseNum(trRow['SoldOpen'])      || 0,
+            high:       parseNum(trRow['SoldHigh'])      || 0,
+            low:        parseNum(trRow['SoldLow'])       || 0,
+            close:      parseNum(trRow['SoldClose'])     || 0
+        };
+        if(sd.close > 0 || sd.high > 0) soldOHLCV = sd;
+    }
+
     dates.forEach(d => {
-        if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
-            const stockData = stockHistoryData[stock][d];
-            dataPoints.push({
-                date: d,
-                data: stockData
-            });
+        const isSoldDay = isSoldTr && d === endDateStr;
+        if(isSoldDay && soldOHLCV) {
+            dataPoints.push({date: d, data: soldOHLCV});
+        } else if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
+            dataPoints.push({date: d, data: stockHistoryData[stock][d]});
+        } else if(isSoldDay) {
+            dataPoints.push({date: d, data: {prev_close:0, open:0, high:0, low:0, close:0}});
         }
     });
 
@@ -1665,24 +1679,40 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
     }
 
     const dataPoints = [];
+
+    // Find trade row to get sold OHLCV columns
+    const tradeRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
+    const isSoldTrade = tradeRow && isClosed(tradeRow);
+
+    // Build sold date OHLCV from Pickse columns (SoldPrevClose/SoldOpen etc.)
+    let soldDateOHLCV = null;
+    if(isSoldTrade && endDateStr) {
+        const sd = {
+            prev_close: parseNum(tradeRow['SoldPrevClose']) || 0,
+            open:       parseNum(tradeRow['SoldOpen'])      || 0,
+            high:       parseNum(tradeRow['SoldHigh'])      || 0,
+            low:        parseNum(tradeRow['SoldLow'])       || 0,
+            close:      parseNum(tradeRow['SoldClose'])     || 0
+        };
+        if(sd.close > 0 || sd.high > 0 || sd.low > 0) soldDateOHLCV = sd;
+    }
+
     dates.forEach(d => {
-        if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
-            dataPoints.push({date: d, data: stockHistoryData[stock][d], isSold: false});
+        const isSoldDay = isSoldTrade && d === endDateStr;
+        // For sold date: prefer Pickse SoldOHLCV columns, fallback to stockHistoryData
+        if(isSoldDay && soldDateOHLCV) {
+            dataPoints.push({date: d, data: soldDateOHLCV, isSold: true});
+        } else if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
+            dataPoints.push({date: d, data: stockHistoryData[stock][d], isSold: isSoldDay});
+        } else if(isSoldDay && !soldDateOHLCV) {
+            // Sold date has no data at all — still show as sold marker with zeros
+            dataPoints.push({date: d, data: {prev_close:0, open:0, high:0, low:0, close:0}, isSold: true});
         }
     });
 
-    const tradeRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
-    if(tradeRow && isClosed(tradeRow) && endDateStr) {
-        const soldData = {
-            prev_close: parseNum(tradeRow['SoldPrevClose']) || 0,
-            open: parseNum(tradeRow['SoldOpen']) || 0,
-            high: parseNum(tradeRow['SoldHigh']) || 0,
-            low: parseNum(tradeRow['SoldLow']) || 0,
-            close: parseNum(tradeRow['SoldClose']) || 0
-        };
-        if(soldData.high > 0 || soldData.low > 0 || soldData.close > 0) {
-            dataPoints.push({date: endDateStr, data: soldData, isSold: true});
-        }
+    // If sold date not in date range (e.g. same day buy+sell edge case), append it
+    if(isSoldTrade && endDateStr && !dates.includes(endDateStr) && soldDateOHLCV) {
+        dataPoints.push({date: endDateStr, data: soldDateOHLCV, isSold: true});
     }
 
     const tableBody = document.getElementById('sdTableBody');
