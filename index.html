@@ -1713,16 +1713,16 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
         dataPoints.push({date: endDateStr, data: soldDateOHLCV, isSold: true});
     }
 
-    const tableBody = document.getElementById('sdTableBody');
-    const badgesEl = document.getElementById('sdBadges');
-    const exportButtonsEl = document.getElementById('sdExportButtons');
-    const pagerEl = document.getElementById('sdPager');
+    const sdContent      = document.getElementById('sdContent');
+    const badgesEl       = document.getElementById('sdBadges');
+    const exportButtonsEl= document.getElementById('sdExportButtons');
+    const pagerEl        = document.getElementById('sdPager');
 
     if (dataPoints.length === 0) {
-        badgesEl.innerHTML = '';
-        exportButtonsEl.innerHTML = '';
-        tableBody.innerHTML = '<div style="text-align:center; color:#ef4444; font-weight:bold; padding:40px;">No historical data found for this stock/date range.</div>';
-        pagerEl.innerHTML = '';
+        if (badgesEl)        badgesEl.innerHTML       = '';
+        if (exportButtonsEl) exportButtonsEl.innerHTML= '';
+        if (sdContent)       sdContent.innerHTML      = '<div style="text-align:center; color:#ef4444; font-weight:bold; padding:40px;">No historical data found for this stock/date range.<br><small style=\"color:#64748b;font-weight:normal;\">BuyHistory sheet may not have data for this stock.</small></div>';
+        if (pagerEl)         pagerEl.innerHTML        = '';
         return;
     }
 
@@ -1841,10 +1841,7 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
     });
 
     html += `</tbody></table>`;
-    // Write to sdContent (not tableBody — tableBody is inside the fixed table header)
-    const sdContent = document.getElementById('sdContent');
     if (sdContent) sdContent.innerHTML = html;
-    else if (tableBody) tableBody.innerHTML = html;
     
     // RENDER HORIZONTAL BADGES BELOW TABLE (shown on every page)
     badgesEl.innerHTML = `
