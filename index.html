@@ -250,6 +250,14 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
 <div id="calls" class="card hidden">
   <div class="badges" id="callsBadges"></div>
+  <div style="margin-bottom:10px;">
+    <label style="font-weight:700;color:var(--blue2);font-size:12px;">Filter Status:</label>
+    <select id="callsStatusFilter" onchange="renderCalls()" style="min-width:140px;">
+      <option value="all">All</option>
+      <option value="fresh">Fresh Call Only</option>
+      <option value="open">Open Call Only</option>
+    </select>
+  </div>
   <div class="table-area" id="callsTable"></div>
   <div class="pager" id="callsPager"></div>
 </div>
@@ -694,18 +702,19 @@ function filteredRows(){
 
 // Filter Functions
 function filteredCalls() {
-    // Fresh Call  = Invalid + Result "Invalid: No data on signal date" (holiday/missing — still actionable)
-    // Open Call   = Pending (buy not triggered yet, within 30-day window)
-    // Expired     = Expired (30-day window passed, missed)
-    // Other Invalid scenarios (no market data, data gap, stale) excluded
+    // Fresh Call = Invalid + Result "Invalid: No data on signal date" (holiday/missing — still actionable)
+    // Open Call  = Pending (buy not triggered yet, within 30-day window)
+    // Expired and other Invalid scenarios NOT shown in Calls tab
+    const callsFilter = document.getElementById('callsStatusFilter');
+    const filterVal = callsFilter ? callsFilter.value : 'all';
     return allRows.filter(r => {
         const o = String(r['Order'] || '').trim().toLowerCase();
-        if (o === 'pending' || o === 'expired') return true;
-        if (o === 'invalid') {
-            const result = String(r['Result'] || '').trim();
-            return result === 'Invalid: No data on signal date';
-        }
-        return false;
+        const isFreshCall = o === 'invalid' && String(r['Result'] || '').trim() === 'Invalid: No data on signal date';
+        const isOpenCall  = o === 'pending';
+        if (!isFreshCall && !isOpenCall) return false;
+        if (filterVal === 'fresh') return isFreshCall;
+        if (filterVal === 'open')  return isOpenCall;
+        return true; // 'all'
     });
 }
 
@@ -1196,11 +1205,9 @@ function renderCalls(){
         return;
     }
     
-    const freshCount   = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='invalid'&&String(r['Result']||'').trim()==='Invalid: No data on signal date').length;
-    const openCount    = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
-    const expiredCount2 = rows.filter(r=>isExpiredRow(r)).length;
-    const invalidCount2  = allRows.filter(r=>isInvalid(r)&&String(r['Result']||'').trim()!=='Invalid: No data on signal date').length;
-    badgeEl.innerHTML=`<span class="badge">Total: ${total}</span><span class="badge green">Fresh Call: ${freshCount}</span><span class="badge" style="background:#f59e0b;color:#fff;">Open Call: ${openCount}</span><span class="badge" style="background:#94a3b8;color:#fff;">Expired: ${expiredCount2}</span><span class="badge" style="background:#ef4444;color:#fff;">Invalid: ${invalidCount2}</span>`;
+    const freshCount = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='invalid'&&String(r['Result']||'').trim()==='Invalid: No data on signal date').length;
+    const openCount  = rows.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
+    badgeEl.innerHTML=`<span class="badge">Total: ${total}</span><span class="badge green">Fresh Call: ${freshCount}</span><span class="badge" style="background:#f59e0b;color:#fff;">Open Call: ${openCount}</span>`;
 
     let html='<table><thead><tr><th>Date</th><th>Stock</th><th>1D%</th><th>5D%</th><th>Buy Price</th><th>LTP</th><th>Target</th><th>SL</th><th>Status</th></tr></thead><tbody>';
     for(const r of slice){
@@ -1211,9 +1218,8 @@ function renderCalls(){
         const resultVal=String(r['Result']||'').trim();
         const isFresh    = orderStatus==='invalid' && resultVal==='Invalid: No data on signal date';
         const isOpenCall = orderStatus==='pending';
-        const isExpired2 = orderStatus==='expired';
-        const statusBtnClass = isFresh ? 'fresh-call' : (isOpenCall ? 'open-call' : (isExpired2 ? 'expired-call' : ''));
-        const statusText     = isFresh ? 'Fresh Call'  : (isOpenCall ? 'Open Call'  : (isExpired2 ? 'Expired'     : ''));
+        const statusBtnClass = isFresh ? 'fresh-call' : 'open-call';
+        const statusText     = isFresh ? 'Fresh Call'  : 'Open Call';
         html+=`<tr><td>${toDateStr(r['BuyDate'])}</td><td>${r['StockName']||''}</td><td class="${colorCls(r['1DChange%'])}">${fmtPct(r['1DChange%'])}</td><td class="${colorCls(r['5DLow%'])}">${fmtPct(r['5DLow%'])}</td><td>${fmtCur(buyPrice)}</td><td>${fmtCur(ltp)}</td><td class="green">${fmtCur(parseNum(r['TargetPrice'])||buyPrice*1.10)}</td><td class="red">${fmtCur(parseNum(r['StoplossPrice'])||buyPrice*0.80)}</td><td><button class="status-btn ${statusBtnClass}">${statusText}</button></td></tr>`
     }
     html+='</tbody></table>';
