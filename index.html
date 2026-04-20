@@ -192,7 +192,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
 <div class="container">
 
-<div class="cstrip" id="dateBox" style="display:none;">
+<div class="cstrip" id="dateBox" style="">
   <span class="slbl">Signal Date:</span>
   <select id="dateSelect" onchange="onDateChange(this.value)" style="min-width:155px;"></select>
   <span class="slbl" style="margin-left:6px;">Range:</span>
@@ -860,6 +860,7 @@ function populateDates(){
     }
     selectedDate=dates[0];
     els.dateBox.classList.remove('hidden');
+    els.dateBox.style.display='flex';
     els.tabs.classList.remove('hidden');
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
     // Show Last Signal Date in global bar
