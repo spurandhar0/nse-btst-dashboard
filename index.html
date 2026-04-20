@@ -351,8 +351,9 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:13px;">
     <label style="font-weight:700;color:var(--blue2);font-size:12px;">Days to Force Exit:</label>
     <select id="forceExitFilter" onchange="renderForceExit()" style="min-width:130px;">
-      <option value="all">All</option><option value="5">Within 5 days</option>
-      <option value="10">Within 10 days</option><option value="15">Within 15 days</option><option value="20">Within 20 days</option>
+      <option value="all">All</option>
+      <option value="warning">⚠️ Warning Only (35-44 days)</option>
+      <option value="critical">🔴 Critical Only (45+ days)</option>
     </select>
     <span id="forceExitPill" class="pill" style="display:none;"></span>
   </div>
@@ -409,12 +410,19 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
 <div id="stockDetailView" style="display:none;">
   <div id="sdCard">
-    <div id="sdHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;">
-      <h3 id="sdTitle" style="margin:0;color:var(--navy);font-size:17px;font-weight:800;"></h3>
+    <div id="sdHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;">
+      <div>
+        <h3 id="sdTitle" style="margin:0;color:var(--navy);font-size:17px;font-weight:800;"></h3>
+        <div id="sdSubtitle" style="font-size:12px;color:var(--text3);margin-top:3px;"></div>
+      </div>
       <div id="sdExportButtons" style="display:flex;gap:7px;"></div>
-      <button onclick="document.getElementById('stockDetailView').style.display='none'" style="background:#64748b;padding:6px 13px;font-size:12px;">✕ Close</button>
+      <button onclick="closeStockDetail()" style="background:#64748b;padding:6px 13px;font-size:12px;">✕ Close</button>
     </div>
-    <div id="sdContent"></div>
+    <div id="sdBadges" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+    <div id="sdContent">
+      <div class="table-area"><table><thead><tr><th>Date</th><th>Prev Close</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Change</th></tr></thead><tbody id="sdTableBody"></tbody></table></div>
+    </div>
+    <div class="pager" id="sdPager"></div>
   </div>
 </div>
 
@@ -1046,7 +1054,7 @@ function renderTradeHistory(){
     const container=document.getElementById('tradeHistoryContent');
     const summaryEl=document.getElementById('tradeHistorySummary');
     if(!container)return;
-    const filterVal=document.getElementById('tradeHistoryFilter')?.value||'all';
+    const filterVal=document.getElementById('thStatusFilter')?.value||'all';
     
     const rows=filteredRows().filter(r=>{
         const s=String(r['Status']||'').trim().toLowerCase();
@@ -1456,19 +1464,22 @@ function renderStockHistory(){
     const container = document.getElementById('stockHistoryTable');
     if(!container) return;
     
-    const filterVal = document.getElementById('stockHistoryFilter')?.value || 'all';
+    const searchQ  = (document.getElementById('shSearch')?.value  || '').trim().toLowerCase();
+    const fromDate = document.getElementById('shFromDate')?.value || '';
+    const toDate   = document.getElementById('shToDate')?.value   || '';
 
     let rows = filteredRows().filter(r => {
         const s = String(r['Status']||'').trim().toLowerCase();
         const o = String(r['Order']||'').trim().toLowerCase();
         if(s === 'expired') return false;
         if(o === 'invalid' || o === 'pending') return false;
-
         if(!boughtDateKey(r)) return false;
-
-        if(filterVal === 'holding' && isClosed(r)) return false;
-        if(filterVal === 'closed' && !isClosed(r)) return false;
-
+        // Search filter
+        if(searchQ && !String(r['StockName']||'').toLowerCase().includes(searchQ)) return false;
+        // Date range filter on BoughtDate
+        const bd = boughtDateKey(r);
+        if(fromDate && bd && bd < fromDate) return false;
+        if(toDate   && bd && bd > toDate)   return false;
         return true;
     }).sort((a,b)=>(boughtDateKey(b)>boughtDateKey(a)?1:-1));
 
@@ -1575,20 +1586,51 @@ function renderStockHistory(){
     container.innerHTML = html;
 }
 
+/* STOCK HISTORY FILTER FUNCTIONS */
+
+function applyStockHistoryFilter() {
+    const fromDate = document.getElementById('shFromDate')?.value || '';
+    const toDate   = document.getElementById('shToDate')?.value   || '';
+    if (fromDate && toDate && new Date(fromDate) > new Date(toDate)) {
+        alert('From Date cannot be greater than To Date');
+        return;
+    }
+    renderStockHistory();
+}
+
+function resetStockHistoryFilter() {
+    const f = document.getElementById('shFromDate');
+    const t = document.getElementById('shToDate');
+    const s = document.getElementById('shSearch');
+    if (f) f.value = '';
+    if (t) t.value = '';
+    if (s) s.value = '';
+    renderStockHistory();
+}
+
 /* NEW FUNCTIONS FOR SEPARATE STOCK HISTORY PAGE */
 
 function openStockDetail(stock, startDateStr, endDateStr) {
     const mainContainer = document.querySelector('.container');
     const detailView = document.getElementById('stockDetailView');
-    
+
     // Switch Views
-    mainContainer.classList.add('hidden');
-    detailView.classList.add('active');
-    
+    if (mainContainer) mainContainer.style.display = 'none';
+    detailView.style.display = 'flex';
+
     // Populate Header
     document.getElementById('sdTitle').textContent = `📊 Stock History: ${stock}`;
-    document.getElementById('sdSubtitle').textContent = `From: ${startDateStr} To: ${endDateStr}`;
-    
+    const sub = document.getElementById('sdSubtitle');
+    if (sub) sub.textContent = `From: ${startDateStr}  To: ${endDateStr}`;
+
+    // Clear previous content
+    const sdBadges = document.getElementById('sdBadges');
+    const sdTableBody = document.getElementById('sdTableBody');
+    const sdPager = document.getElementById('sdPager');
+    if (sdBadges) sdBadges.innerHTML = '';
+    if (sdTableBody) sdTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">Loading...</td></tr>';
+    if (sdPager) sdPager.innerHTML = '';
+
     // Populate Page Content
     renderFullStockHistory(stock, startDateStr, endDateStr);
 }
@@ -1596,9 +1638,9 @@ function openStockDetail(stock, startDateStr, endDateStr) {
 function closeStockDetail() {
     const mainContainer = document.querySelector('.container');
     const detailView = document.getElementById('stockDetailView');
-    
-    detailView.classList.remove('active');
-    mainContainer.classList.remove('hidden');
+
+    detailView.style.display = 'none';
+    if (mainContainer) mainContainer.style.display = '';
 }
 
 function renderFullStockHistory(stock, startDateStr, endDateStr) {
@@ -1762,7 +1804,10 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
     });
 
     html += `</tbody></table>`;
-    tableBody.innerHTML = html;
+    // Write to sdContent (not tableBody — tableBody is inside the fixed table header)
+    const sdContent = document.getElementById('sdContent');
+    if (sdContent) sdContent.innerHTML = html;
+    else if (tableBody) tableBody.innerHTML = html;
     
     // RENDER HORIZONTAL BADGES BELOW TABLE (shown on every page)
     badgesEl.innerHTML = `
@@ -1938,15 +1983,56 @@ function renderAllTablesOnly(){
     renderAvgBuyTrigger();
     renderSellTrigger();
     renderAvgHistory();
+    renderForceExit();
     if(!document.getElementById('stockHistory').classList.contains('hidden')) renderStockHistory();
-    if(!document.getElementById('forceExit').classList.contains('hidden')) renderForceExit();
 }
 
 function renderAll(){ 
-    renderForceExit();
     renderOverview();
     renderAllTablesOnly();
-    renderPerformance()
+    renderPerformance();
+}
+
+/* UTILITY FUNCTIONS */
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        toast.addEventListener('animationend', () => {
+            if (container.contains(toast)) container.removeChild(toast);
+        });
+    }, 3000);
+}
+
+function exportAll() {
+    const rows = filteredRows();
+    if (!rows.length) { showToast('No data to export', 'error'); return; }
+    const out = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(out, XLSX.utils.json_to_sheet(rows), 'Pickse');
+    XLSX.writeFile(out, `Dashboard_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
+    showToast('✅ Excel exported!', 'success');
+}
+
+function exportCSV() {
+    const rows = filteredRows();
+    if (!rows.length) { showToast('No data to export', 'error'); return; }
+    const headers = Object.keys(rows[0]);
+    const lines = rows.map(r => headers.map(h => {
+        const v = String(r[h] == null ? '' : r[h]).replace(/"/g, '""');
+        return (v.indexOf(',') >= 0 || v.indexOf('"') >= 0) ? '"' + v + '"' : v;
+    }).join(','));
+    const csv = [headers.join(',')].concat(lines).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'Dashboard_Export_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    showToast('CSV exported!', 'success');
 }
 
 /* PART 12: EXPORT FUNCTIONS (REVISED FOR FIXED SIZE & DATA INTEGRITY) */
