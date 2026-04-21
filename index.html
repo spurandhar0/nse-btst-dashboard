@@ -1682,8 +1682,12 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
 
     const dataPoints = [];
 
-    // Find trade row to get sold OHLCV columns
-    const tradeRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
+    // Find trade row - case insensitive
+    const stockUpper = stock.toUpperCase();
+    const tradeRow = filteredRows().find(r => 
+        String(r.StockName||'').toUpperCase() === stockUpper && 
+        boughtDateKey(r) === startDateStr
+    );
     const isSoldTrade = tradeRow && isClosed(tradeRow);
 
     // Build sold date OHLCV from Pickse columns (SoldPrevClose/SoldOpen etc.)
@@ -1704,11 +1708,27 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
         // For sold date: prefer Pickse SoldOHLCV columns, fallback to stockHistoryData
         if(isSoldDay && soldDateOHLCV) {
             dataPoints.push({date: d, data: soldDateOHLCV, isSold: true});
-        } else if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
-            dataPoints.push({date: d, data: stockHistoryData[stock][d], isSold: isSoldDay});
-        } else if(isSoldDay && !soldDateOHLCV) {
-            // Sold date has no data at all — still show as sold marker with zeros
-            dataPoints.push({date: d, data: {prev_close:0, open:0, high:0, low:0, close:0}, isSold: true});
+        } else {
+            // Try stockHistoryData with case-insensitive lookup
+            const stockUpper = stock.toUpperCase();
+            let stockData = stockHistoryData[stockUpper]?.[d];
+            
+            // Fallback: try any case match
+            if (!stockData && stockHistoryData) {
+                for (const k of Object.keys(stockHistoryData)) {
+                    if (k.toUpperCase() === stockUpper) {
+                        stockData = stockHistoryData[k]?.[d];
+                        break;
+                    }
+                }
+            }
+            
+            if (stockData) {
+                dataPoints.push({date: d, data: stockData, isSold: isSoldDay});
+            } else if(isSoldDay && !soldDateOHLCV) {
+                // Sold date with no data - show zeros
+                dataPoints.push({date: d, data: {prev_close:0, open:0, high:0, low:0, close:0}, isSold: true});
+            }
         }
     });
 
