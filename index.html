@@ -196,8 +196,8 @@ select:focus,input:focus{border-color:var(--blue2);outline:none;box-shadow:0 0 0
 .perf-kpi.accent .kpi-value{color:#1d4ed8;}
 .perf-kpi.big .kpi-value{font-size:18px;}
 
-.perf-chart-row{display:grid;grid-template-columns:1fr 1.3fr;gap:14px;align-items:stretch;}
-@media(max-width:900px){.perf-chart-row{grid-template-columns:1fr;}}
+.perf-chart-row{display:flex;flex-direction:column;gap:12px;}
+.perf-chart-row .perf-chart-box{width:100%;}
 .perf-chart-box{background:var(--surface2);border:1px solid var(--surface3);border-radius:10px;padding:11px;}
 .perf-chart-title{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;}
 .perf-chart-labels{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;font-size:11px;justify-content:center;}
@@ -205,7 +205,6 @@ select:focus,input:focus{border-color:var(--blue2);outline:none;box-shadow:0 0 0
 .perf-chart-labels .red{color:#dc2626;font-weight:700;}
 
 @media(max-width:640px){
-  .perf-chart-row{grid-template-columns:1fr;}
   .perf-hero-card.feature{grid-column:span 1;}
 }
 
@@ -400,12 +399,12 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
         <div class="perf-chart-row">
           <div class="perf-chart-box">
             <div class="perf-chart-title">Win / Loss Split</div>
-            <div class="perf-chart-canvas" style="height:240px;position:relative;"><canvas id="closedWinLossChart"></canvas></div>
+            <div class="perf-chart-canvas" style="height:200px;max-width:360px;margin:0 auto;position:relative;"><canvas id="closedWinLossChart"></canvas></div>
             <div id="closedChartLabels" class="perf-chart-labels"></div>
           </div>
           <div class="perf-chart-box">
             <div class="perf-chart-title">Top Closed P&amp;L</div>
-            <div id="closedChartHolder" class="perf-chart-canvas" style="height:320px;position:relative;"><canvas id="closedChart"></canvas></div>
+            <div id="closedChartHolder" class="perf-chart-canvas" style="height:260px;position:relative;"><canvas id="closedChart"></canvas></div>
           </div>
         </div>
       </div>
@@ -421,12 +420,12 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
         <div class="perf-chart-row">
           <div class="perf-chart-box">
             <div class="perf-chart-title">Profit / Loss Split</div>
-            <div class="perf-chart-canvas" style="height:240px;position:relative;"><canvas id="holdWinLossChart"></canvas></div>
+            <div class="perf-chart-canvas" style="height:200px;max-width:360px;margin:0 auto;position:relative;"><canvas id="holdWinLossChart"></canvas></div>
             <div id="holdChartLabels" class="perf-chart-labels"></div>
           </div>
           <div class="perf-chart-box">
             <div class="perf-chart-title">Top Holding P&amp;L</div>
-            <div id="holdChartHolder" class="perf-chart-canvas" style="height:320px;position:relative;"><canvas id="holdChart"></canvas></div>
+            <div id="holdChartHolder" class="perf-chart-canvas" style="height:260px;position:relative;"><canvas id="holdChart"></canvas></div>
           </div>
         </div>
       </div>
@@ -2369,9 +2368,9 @@ function updateTopPnlBarChart(canvasId, rows, chartRef) {
     // Dynamic canvas-holder height so bars don't crush together
     const holder = ctx.parentElement;
     if(holder){
-        const perBar = 32;
-        const pad = 40;
-        holder.style.height = Math.max(240, merged.length * perBar + pad) + 'px';
+        const perBar = 28;
+        const pad = 44;
+        holder.style.height = Math.max(220, merged.length * perBar + pad) + 'px';
     }
 
     charts[chartRef] = new Chart(ctx, {
