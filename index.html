@@ -154,6 +154,57 @@ select:focus,input:focus{border-color:var(--blue2);outline:none;box-shadow:0 0 0
 .md-subtab.active{background:linear-gradient(135deg,var(--blue2),var(--cyan2));color:#fff;border-color:var(--blue2);box-shadow:0 3px 10px rgba(37,99,235,.3);}
 .md-subtab:hover:not(.active){border-color:var(--blue2);color:var(--blue2);}
 
+/* PERFORMANCE TAB */
+.perf-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px;}
+.perf-hero-card{background:linear-gradient(135deg,#f8faff,#eef2ff);border:1.5px solid #c7d7fe;border-radius:12px;padding:14px 16px;text-align:left;position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s;}
+.perf-hero-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(13,31,60,.12);}
+.perf-hero-card .phc-label{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.perf-hero-card .phc-value{font-size:22px;font-weight:900;line-height:1.15;color:var(--navy);}
+.perf-hero-card .phc-sub{font-size:11px;font-weight:600;color:var(--text3);margin-top:4px;}
+.perf-hero-card.pos{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;}
+.perf-hero-card.pos .phc-value{color:#059669;}
+.perf-hero-card.neg{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;}
+.perf-hero-card.neg .phc-value{color:#dc2626;}
+.perf-hero-card.feature{grid-column:span 2;background:linear-gradient(135deg,#0d1f3c,#162847);border-color:var(--cyan2);color:#fff;}
+.perf-hero-card.feature .phc-label{color:rgba(255,255,255,.7);}
+.perf-hero-card.feature .phc-value{color:#fff;font-size:28px;}
+.perf-hero-card.feature .phc-sub{color:rgba(255,255,255,.75);}
+.perf-hero-card.feature.pos{background:linear-gradient(135deg,#065f46,#0f766e);}
+.perf-hero-card.feature.neg{background:linear-gradient(135deg,#7f1d1d,#991b1b);}
+
+.perf-panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;}
+.perf-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 1px 6px rgba(13,31,60,.05);}
+.perf-panel-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid var(--surface3);}
+.perf-panel-head-closed{border-bottom-color:#dc2626;}
+.perf-panel-head-hold{border-bottom-color:#2563eb;}
+.perf-panel-icon{font-size:18px;}
+.perf-panel-title{font-size:14px;font-weight:800;color:var(--navy);}
+.perf-panel-sub{font-size:11px;font-weight:600;color:var(--text3);margin-left:auto;}
+
+.perf-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:8px;margin-bottom:14px;}
+.perf-kpi{background:var(--surface2);border:1px solid var(--surface3);border-radius:8px;padding:9px 11px;text-align:left;}
+.perf-kpi .kpi-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;}
+.perf-kpi .kpi-value{font-size:15px;font-weight:800;color:var(--text);line-height:1.2;margin-top:3px;}
+.perf-kpi.pos{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;}
+.perf-kpi.pos .kpi-value{color:#059669;}
+.perf-kpi.neg{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;}
+.perf-kpi.neg .kpi-value{color:#dc2626;}
+.perf-kpi.accent{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-color:#3b82f6;}
+.perf-kpi.accent .kpi-value{color:#1d4ed8;}
+.perf-kpi.big .kpi-value{font-size:18px;}
+
+.perf-chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.perf-chart-box{background:var(--surface2);border:1px solid var(--surface3);border-radius:10px;padding:11px;}
+.perf-chart-title{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;}
+.perf-chart-labels{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;font-size:11px;justify-content:center;}
+.perf-chart-labels .green{color:#059669;font-weight:700;}
+.perf-chart-labels .red{color:#dc2626;font-weight:700;}
+
+@media(max-width:640px){
+  .perf-chart-row{grid-template-columns:1fr;}
+  .perf-hero-card.feature{grid-column:span 1;}
+}
+
 /* FOOTER */
 footer{text-align:center;padding:16px 24px;margin-top:16px;background:var(--navy);color:rgba(255,255,255,.5);font-size:12px;border-top:2px solid rgba(255,255,255,.08);}
 footer span{color:rgba(255,255,255,.85);font-weight:700;}
@@ -320,28 +371,60 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 </div>
 
 <div id="performance" class="card hidden">
-  <div id="perfHeader" style="margin-bottom:18px;">
-    <h3 style="margin:0 0 14px;color:var(--navy);font-size:16px;font-weight:800;">Performance Analytics</h3>
-
-    <!-- Combined overview stat -->
-    <div id="perfStatsOverview" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;"></div>
-
-    <div style="display:flex;gap:18px;flex-wrap:wrap;">
-      <!-- Closed trades column -->
-      <div style="flex:1;min-width:280px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">Closed Trades</div>
-        <div id="closedPerfStats" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
-        <div style="height:200px;"><canvas id="closedChart"></canvas></div>
-        <div id="closedChartLabels" style="margin-top:7px;display:flex;flex-wrap:wrap;gap:5px;font-size:11px;"></div>
-        <div style="height:180px;margin-top:12px;"><canvas id="closedWinLossChart"></canvas></div>
+  <div id="perfHeader">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      <div>
+        <h3 style="margin:0;color:var(--navy);font-size:18px;font-weight:800;">📊 Performance Analytics</h3>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px;">Deep dive into closed and holding trade statistics</div>
       </div>
-      <!-- Holding trades column -->
-      <div style="flex:1;min-width:280px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">Holding Trades</div>
-        <div id="holdPerfStats" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
-        <div style="height:200px;"><canvas id="holdChart"></canvas></div>
-        <div id="holdChartLabels" style="margin-top:7px;display:flex;flex-wrap:wrap;gap:5px;font-size:11px;"></div>
-        <div style="height:180px;margin-top:12px;"><canvas id="holdWinLossChart"></canvas></div>
+      <div id="perfExportButtons" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    </div>
+
+    <!-- Hero overall KPIs -->
+    <div id="perfHero" class="perf-hero"></div>
+
+    <!-- Two-column analytics panels -->
+    <div class="perf-panels">
+      <!-- Closed trades panel -->
+      <div class="perf-panel">
+        <div class="perf-panel-head perf-panel-head-closed">
+          <span class="perf-panel-icon">🏁</span>
+          <span class="perf-panel-title">Closed Trades</span>
+          <span class="perf-panel-sub" id="closedPanelSub"></span>
+        </div>
+        <div id="closedPerfStats" class="perf-kpi-grid"></div>
+        <div class="perf-chart-row">
+          <div class="perf-chart-box">
+            <div class="perf-chart-title">Win / Loss Split</div>
+            <div style="height:180px;"><canvas id="closedWinLossChart"></canvas></div>
+            <div id="closedChartLabels" class="perf-chart-labels"></div>
+          </div>
+          <div class="perf-chart-box">
+            <div class="perf-chart-title">Top Closed P&amp;L</div>
+            <div style="height:180px;"><canvas id="closedChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Holding trades panel -->
+      <div class="perf-panel">
+        <div class="perf-panel-head perf-panel-head-hold">
+          <span class="perf-panel-icon">⏳</span>
+          <span class="perf-panel-title">Holding Trades</span>
+          <span class="perf-panel-sub" id="holdPanelSub"></span>
+        </div>
+        <div id="holdPerfStats" class="perf-kpi-grid"></div>
+        <div class="perf-chart-row">
+          <div class="perf-chart-box">
+            <div class="perf-chart-title">Profit / Loss Split</div>
+            <div style="height:180px;"><canvas id="holdWinLossChart"></canvas></div>
+            <div id="holdChartLabels" class="perf-chart-labels"></div>
+          </div>
+          <div class="perf-chart-box">
+            <div class="perf-chart-title">Top Holding P&amp;L</div>
+            <div style="height:180px;"><canvas id="holdChart"></canvas></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -882,12 +965,29 @@ function populateDates(){
     els.dateBox.style.display='flex';
     els.tabs.classList.remove('hidden');
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
+    // Populate Signal Date dropdown
+    if(els.dateSelect){
+        els.dateSelect.innerHTML = '<option value="">All Dates</option>' +
+            dates.map(d=>`<option value="${d}"${d===selectedDate?' selected':''}>${d}</option>`).join('');
+        els.dateSelect.value = selectedDate;
+    }
     // Show Last Signal Date in global bar
     const lastSigEl = document.getElementById('globalLastSignal');
     if(lastSigEl && dates.length){
         lastSigEl.textContent = '📅 Last Signal: ' + dates[0];
     }
     setLoading(false)
+}
+
+function onDateChange(val){
+    selectedDate = val || '';
+    Object.keys(pageState).forEach(k=>pageState[k].page=1);
+    const lastSigEl = document.getElementById('globalLastSignal');
+    if(lastSigEl){
+        lastSigEl.textContent = selectedDate ? ('📅 Signal: ' + selectedDate) : '📅 All Dates';
+    }
+    renderAll();
+    showToast(selectedDate ? `📅 Signal Date: ${selectedDate}` : '📅 All Dates', 'info');
 }
 
 function switchTab(name){
@@ -993,11 +1093,11 @@ function populateTradeHistoryData(divElement, stock, startDateStr, endDateStr) {
     const start = new Date(startDateStr + 'T00:00:00'); 
     const end = new Date(endDateStr + 'T00:00:00');
     
-    // Loop from start to end (inclusive)
+    // Loop from start to end (inclusive). Use local-date formatter — NOT toISOString()
+    // (toISOString converts to UTC and can shift the date by one day in +ve timezones).
     let current = new Date(start);
     while (current <= end) {
-        const dateKey = current.toISOString().split('T')[0];
-        dates.push(dateKey);
+        dates.push(fmtDateLocalFromDate(current));
         current.setDate(current.getDate() + 1);
     }
 
@@ -1006,30 +1106,52 @@ function populateTradeHistoryData(divElement, stock, startDateStr, endDateStr) {
 
     // Gather valid data points — use SoldOHLCV from Pickse for sold date
     const dataPoints = [];
-    const trRow = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
+    const trRow = filteredRows().find(r =>
+        String(r.StockName||'').toUpperCase() === String(stock||'').toUpperCase() &&
+        boughtDateKey(r) === startDateStr
+    );
     const isSoldTr = trRow && isClosed(trRow);
     let soldOHLCV = null;
-    if(isSoldTr && endDateStr) {
+    let soldRealDate = null; // actual SoldDate from sheet — may differ from endDateStr
+    if(isSoldTr) {
+        soldRealDate = soldDateKey(trRow) || endDateStr;
         const sd = {
             prev_close: parseNum(trRow['SoldPrevClose']) || 0,
             open:       parseNum(trRow['SoldOpen'])      || 0,
             high:       parseNum(trRow['SoldHigh'])      || 0,
             low:        parseNum(trRow['SoldLow'])       || 0,
-            close:      parseNum(trRow['SoldClose'])     || 0
+            close:      parseNum(trRow['SoldClose'])     || parseNum(trRow['SoldPrice']) || 0
         };
-        if(sd.close > 0 || sd.high > 0) soldOHLCV = sd;
+        if(sd.close > 0 || sd.high > 0 || sd.low > 0) soldOHLCV = sd;
     }
 
+    // Case-insensitive lookup helper for stockHistoryData
+    const stockUpper = String(stock||'').toUpperCase();
+    const lookup = (d) => {
+        let sd = stockHistoryData[stockUpper]?.[d];
+        if(!sd) {
+            for(const k of Object.keys(stockHistoryData)) {
+                if(k.toUpperCase() === stockUpper) { sd = stockHistoryData[k]?.[d]; break; }
+            }
+        }
+        return sd;
+    };
+
     dates.forEach(d => {
-        const isSoldDay = isSoldTr && d === endDateStr;
+        const isSoldDay = isSoldTr && (d === soldRealDate || d === endDateStr);
         if(isSoldDay && soldOHLCV) {
-            dataPoints.push({date: d, data: soldOHLCV});
-        } else if(stockHistoryData[stock] && stockHistoryData[stock][d]) {
-            dataPoints.push({date: d, data: stockHistoryData[stock][d]});
-        } else if(isSoldDay) {
-            dataPoints.push({date: d, data: {prev_close:0, open:0, high:0, low:0, close:0}});
+            dataPoints.push({date: d, data: soldOHLCV, isSold: true});
+        } else {
+            const sd = lookup(d);
+            if(sd) dataPoints.push({date: d, data: sd, isSold: isSoldDay});
+            else if(isSoldDay) dataPoints.push({date: d, data: {prev_close:0, open:0, high:0, low:0, close:0}, isSold: true});
         }
     });
+
+    // Ensure the sold date row is always present even if it falls outside the loop range
+    if(isSoldTr && soldOHLCV && !dataPoints.some(p => p.isSold)) {
+        dataPoints.push({date: soldRealDate || endDateStr, data: soldOHLCV, isSold: true});
+    }
 
     if (dataPoints.length === 0) {
         html = '<div style="padding:10px; color:#ef4444;">No historical data found for this stock/date range.</div>';
@@ -1049,10 +1171,14 @@ function populateTradeHistoryData(divElement, stock, startDateStr, endDateStr) {
     dataPoints.forEach(pt => {
         const d = pt.date;
         const stockData = pt.data;
-        
-        // Check if this is the Buy Date or Sold Date
-        const isSpecialRow = (d === startDateStr || d === endDateStr);
-        const rowStyle = isSpecialRow ? 'background-color: #fef08a; font-weight: bold; color: #713f12;' : '';
+        const isBought = (d === startDateStr);
+        const isSold = !!pt.isSold;
+        const rowStyle = isBought
+            ? 'background-color:#fef08a; font-weight:bold; color:#713f12;'
+            : (isSold ? 'background-color:#fee2e2; font-weight:bold; color:#7f1d1d;' : '');
+        const tag = isBought
+            ? '<span style="margin-left:6px; padding:2px 7px; background:#eab308; color:#713f12; border-radius:4px; font-size:11px; font-weight:bold;">BOUGHT</span>'
+            : (isSold ? '<span style="margin-left:6px; padding:2px 7px; background:#ef4444; color:#fff; border-radius:4px; font-size:11px; font-weight:bold;">SOLD</span>' : '');
 
         // Check if this row's High/Low is the absolute High/Low for the range
         const isMaxHigh = (stockData.high === rangeMaxHigh && rangeMaxHigh > 0);
@@ -1062,7 +1188,7 @@ function populateTradeHistoryData(divElement, stock, startDateStr, endDateStr) {
         const lowStyle = isMinLow ? 'background-color: #fee2e2; color: #7f1d1d; font-weight:bold;' : '';
 
         html += `<tr style="${rowStyle}">
-            <td>${d} ${isSpecialRow ? (d===startDateStr?'(Bought)': '(Sold)') : ''}</td>
+            <td>${d}${tag}</td>
             <td>${fmtCur(stockData.prev_close)}</td>
             <td>${fmtCur(stockData.open)}</td>
             <td style="${highStyle}">${fmtCur(stockData.high)}</td>
@@ -1173,7 +1299,7 @@ function renderTradeHistory(){
 
         const tradeHistId = `th-${index}`;
         const startDate = normalizeDateKey(r.B0_BoughtDate);
-        const endDate = isSold ? soldDateKey(r) : new Date().toISOString().split('T')[0];
+        const endDate = isSold ? soldDateKey(r) : fmtDateLocalFromDate(new Date());
         
         html += `<div style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
                     <button class="btn-sm btn-outline" onclick="toggleTradeHistoryDetail('${tradeHistId}', '${r.StockName}', '${startDate}', '${endDate}')" style="background:#2563eb; color:#fff; padding:8px 15px; border:none; border-radius:6px; cursor:pointer;">
@@ -1200,41 +1326,106 @@ function renderTradeHistory(){
 
 function renderOverview(){
     document.getElementById('noDataBanner').style.display='none';
-    document.getElementById('overviewStats').style.display='grid';
+    document.getElementById('overviewStats').style.display='block';
     document.getElementById('cumChartBox').style.display='block';
     const rows=filteredRows();
     const holding=filteredHolding();
     const closed=filteredClosed();
     const calls=filteredCalls();
     const expired=filteredExpired();
+    const invalidCount=allRows.filter(r=>isInvalid(r)).length;
+    const pendingCalls=calls.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
     const activeInvested=holding.reduce((s,r)=>{const inv=parseNum(r['TotalInvestment']);if(inv>0)return s+inv;const entry=parseNum(r['AvgBuyPrice'])||parseNum(r['BuyClPrice']);return s+(entry*qtyOf(r))},0);
+    const activeMktVal=holding.reduce((s,r)=>{const ltp=parseNum(r['RecentLTP'])||parseNum(r['AvgBuyPrice'])||parseNum(r['BuyClPrice']);return s+(ltp*qtyOf(r))},0);
+    const closedInvested=closed.reduce((s,r)=>{const inv=parseNum(r['TotalInvestment']);if(inv>0)return s+inv;const entry=parseNum(r['AvgBuyPrice'])||parseNum(r['BuyClPrice']);return s+(entry*qtyOf(r))},0);
     const activePnl=holding.reduce((s,r)=>s+pnlRowExcel(r),0);
     const closedPnl=closed.reduce((s,r)=>s+pnlRowExcel(r),0);
     const totalPnl=rows.reduce((s,r)=>s+pnlRowExcel(r),0);
-    
-    const fmtPnlStat = (val) => {
-        const pos = val >= 0;
-        const prefix = pos ? '+' : '';
-        const color = pos ? '#059669' : '#dc2626';
-        const bg = pos ? 'linear-gradient(135deg,#ecfdf5,#d1fae5)' : 'linear-gradient(135deg,#fef2f2,#fee2e2)';
-        const border = pos ? '#10b981' : '#ef4444';
-        return { display: `${prefix}${fmtCur(val)}`, color, bg, border };
-    };
+    const closedWins=closed.filter(r=>pnlRowExcel(r)>0).length;
+    const closedLosses=closed.filter(r=>pnlRowExcel(r)<0).length;
+    const closedWinRate=closed.length?((closedWins/closed.length)*100):0;
+    const grossProfit=closed.filter(r=>pnlRowExcel(r)>0).reduce((s,r)=>s+pnlRowExcel(r),0);
+    const grossLoss=closed.filter(r=>pnlRowExcel(r)<0).reduce((s,r)=>s+pnlRowExcel(r),0);
+    const avgHoldDays=(()=>{
+        const ds=closed.map(r=>{const b=predDateKey(r);const s=normalizeDateKey(r['SoldDate']);if(!b||!s)return null;return Math.max(0,Math.round((new Date(s+'T00:00:00')-new Date(b+'T00:00:00'))/(1000*60*60*24)))}).filter(x=>x!==null);
+        return ds.length?(ds.reduce((a,b)=>a+b,0)/ds.length):0;
+    })();
+    const bestTrade=closed.slice().sort((a,b)=>pnlRowExcel(b)-pnlRowExcel(a))[0];
+    const worstTrade=closed.slice().sort((a,b)=>pnlRowExcel(a)-pnlRowExcel(b))[0];
+    const nameOf=(r)=>r?(r['Symbol']||r['Stock']||r['Name']||'—'):'—';
 
-    const activePnlFmt  = fmtPnlStat(activePnl);
-    const closedPnlFmt  = fmtPnlStat(closedPnl);
-    const totalPnlFmt   = fmtPnlStat(totalPnl);
+    const pnlCard=(label,val,big)=>{
+        const pos=val>=0;
+        const color=pos?'#059669':'#dc2626';
+        const bg=pos?'linear-gradient(135deg,#ecfdf5,#d1fae5)':'linear-gradient(135deg,#fef2f2,#fee2e2)';
+        const border=pos?'#10b981':'#ef4444';
+        const prefix=pos?'+':'';
+        const vSize=big?'26px':'20px';
+        const lSize=big?'13px':'11px';
+        const shadow=big?`box-shadow:0 6px 18px ${border}55;`:'';
+        return `<div class="stat" style="background:${bg};border-color:${border};${shadow}"><div class="label" style="font-size:${lSize};font-weight:900;">${label}</div><div class="value" style="color:${color};font-size:${vSize};">${prefix}${fmtCur(val)}</div></div>`;
+    };
+    const numCard=(label,val,color)=>`<div class="stat"><div class="label">${label}</div><div class="value"${color?` style="color:${color};"`:''}>${val}</div></div>`;
+
+    const heroColor=totalPnl>=0?'#059669':'#dc2626';
+    const heroBg=totalPnl>=0?'linear-gradient(135deg,#065f46,#059669)':'linear-gradient(135deg,#991b1b,#dc2626)';
+    const heroPrefix=totalPnl>=0?'+':'';
 
     els.overviewStats.innerHTML=`
-        <div class="stat"><div class="label">Filtered Rows</div><div class="value">${rows.length}</div></div>
-        <div class="stat"><div class="label">Calls</div><div class="value">${calls.length}</div></div>
-        <div class="stat"><div class="label">Expired</div><div class="value">${expired.length}</div></div>
-        <div class="stat"><div class="label">Holding</div><div class="value">${holding.length}</div></div>
-        <div class="stat"><div class="label">Closed</div><div class="value">${closed.length}</div></div>
-        <div class="stat"><div class="label">Active Invested</div><div class="value" style="color:#2563eb;">${fmtCur(activeInvested)}</div></div>
-        <div class="stat" style="background:${activePnlFmt.bg}; border-color:${activePnlFmt.border};"><div class="label">Active P&L</div><div class="value" style="color:${activePnlFmt.color};">${activePnlFmt.display}</div></div>
-        <div class="stat" style="background:${closedPnlFmt.bg}; border-color:${closedPnlFmt.border};"><div class="label">Closed P&L</div><div class="value" style="color:${closedPnlFmt.color};">${closedPnlFmt.display}</div></div>
-        <div class="stat" style="background:${totalPnlFmt.bg}; border-color:${totalPnlFmt.border}; box-shadow:0 4px 12px ${totalPnlFmt.border}33;"><div class="label" style="font-size:13px; font-weight:900;">Overall P&L</div><div class="value" style="color:${totalPnlFmt.color}; font-size:22px;">${totalPnlFmt.display}</div></div>
+        <div style="background:${heroBg};padding:22px 28px;border-radius:14px;margin-bottom:18px;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:18px;align-items:center;color:#fff;box-shadow:0 8px 24px ${heroColor}44;">
+            <div>
+                <div style="font-size:12px;font-weight:700;opacity:.85;letter-spacing:.5px;">📊 OVERALL NET P&L</div>
+                <div style="font-size:32px;font-weight:900;margin-top:4px;">${heroPrefix}${fmtCur(totalPnl)}</div>
+                <div style="font-size:11px;opacity:.9;margin-top:2px;">${rows.length} trades · ${closed.length} closed · ${holding.length} holding</div>
+            </div>
+            <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:16px;">
+                <div style="font-size:11px;font-weight:700;opacity:.85;">💼 ACTIVE P&L</div>
+                <div style="font-size:20px;font-weight:900;">${activePnl>=0?'+':''}${fmtCur(activePnl)}</div>
+                <div style="font-size:11px;opacity:.85;margin-top:2px;">Invested: ${fmtCur(activeInvested)}</div>
+            </div>
+            <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:16px;">
+                <div style="font-size:11px;font-weight:700;opacity:.85;">✅ CLOSED P&L</div>
+                <div style="font-size:20px;font-weight:900;">${closedPnl>=0?'+':''}${fmtCur(closedPnl)}</div>
+                <div style="font-size:11px;opacity:.85;margin-top:2px;">Win Rate: ${closedWinRate.toFixed(1)}% (${closedWins}W/${closedLosses}L)</div>
+            </div>
+            <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:16px;">
+                <div style="font-size:11px;font-weight:700;opacity:.85;">📅 SIGNAL DATE</div>
+                <div style="font-size:16px;font-weight:900;">${selectedDate||'All Dates'}</div>
+                <div style="font-size:11px;opacity:.85;margin-top:2px;">${dateRangeActive?`${fromDateGlobal} → ${toDateGlobal}`:'Click dropdown above to filter'}</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:8px;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:.3px;">📋 SIGNAL SNAPSHOT</div>
+        <div class="stat-grid" style="margin-bottom:18px;">
+            ${numCard('Total Rows', rows.length)}
+            ${numCard('Calls', calls.length, '#2563eb')}
+            ${numCard('Pending', pendingCalls, '#f59e0b')}
+            ${numCard('Expired', expired.length, '#64748b')}
+            ${numCard('Holding', holding.length, '#0891b2')}
+            ${numCard('Closed', closed.length, '#059669')}
+            ${numCard('Invalid', invalidCount, '#dc2626')}
+        </div>
+
+        <div style="margin-bottom:8px;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:.3px;">💰 PORTFOLIO & P&L</div>
+        <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat"><div class="label">Active Invested</div><div class="value" style="color:#2563eb;">${fmtCur(activeInvested)}</div></div>
+            <div class="stat"><div class="label">Market Value</div><div class="value" style="color:#0891b2;">${fmtCur(activeMktVal)}</div></div>
+            <div class="stat"><div class="label">Closed Invested</div><div class="value" style="color:#64748b;">${fmtCur(closedInvested)}</div></div>
+            ${pnlCard('Active P&L', activePnl)}
+            ${pnlCard('Closed P&L', closedPnl)}
+            ${pnlCard('Overall P&L', totalPnl, true)}
+        </div>
+
+        <div style="margin-bottom:8px;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:.3px;">🎯 CLOSED TRADE QUALITY</div>
+        <div class="stat-grid" style="margin-bottom:6px;">
+            <div class="stat"><div class="label">Win Rate</div><div class="value" style="color:${closedWinRate>=50?'#059669':'#dc2626'};">${closedWinRate.toFixed(1)}%</div></div>
+            <div class="stat"><div class="label">Wins / Losses</div><div class="value" style="font-size:18px;"><span style="color:#059669;">${closedWins}W</span> / <span style="color:#dc2626;">${closedLosses}L</span></div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Gross Profit</div><div class="value" style="color:#059669;">+${fmtCur(grossProfit)}</div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Gross Loss</div><div class="value" style="color:#dc2626;">${fmtCur(grossLoss)}</div></div>
+            <div class="stat"><div class="label">Avg Hold (days)</div><div class="value" style="color:#7c3aed;">${avgHoldDays.toFixed(1)}</div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Best Trade</div><div class="value" style="color:#059669;font-size:16px;">${bestTrade?'+'+fmtCur(pnlRowExcel(bestTrade)):'—'}</div><div style="font-size:10px;color:#64748b;font-weight:700;margin-top:2px;">${nameOf(bestTrade)}</div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Worst Trade</div><div class="value" style="color:#dc2626;font-size:16px;">${worstTrade?fmtCur(pnlRowExcel(worstTrade)):'—'}</div><div style="font-size:10px;color:#64748b;font-weight:700;margin-top:2px;">${nameOf(worstTrade)}</div></div>
+        </div>
     `;
     
     const mode=els.dlGroup.value;
@@ -1569,8 +1760,8 @@ function renderStockHistory(){
     rows.forEach((r, idx) => {
         const stockName = r.StockName;
         const buyDate = boughtDateKey(r);
-        // Logic: If sold, use SoldDate. If holding, use Today.
-        const soldDate = isClosed(r) ? soldDateKey(r) : new Date().toISOString().split('T')[0];
+        // Logic: If sold, use SoldDate. If holding, use Today (local date).
+        const soldDate = isClosed(r) ? soldDateKey(r) : fmtDateLocalFromDate(new Date());
         const avgBuy = parseNum(r['AvgBuyPrice']) || parseNum(r['BuyClPrice']);
         const buyPrice = fmtCur(avgBuy);
         const qty = qtyOf(r);
@@ -1636,12 +1827,12 @@ function resetStockHistoryFilter() {
 /* NEW FUNCTIONS FOR SEPARATE STOCK HISTORY PAGE */
 
 function openStockDetail(stock, startDateStr, endDateStr) {
-    const mainContainer = document.querySelector('.container');
     const detailView = document.getElementById('stockDetailView');
 
-    // Switch Views
-    if (mainContainer) mainContainer.style.display = 'none';
+    // Show Detail Overlay (position:fixed, sits on top of container)
     detailView.style.display = 'flex';
+    // Prevent background from scrolling while modal is open
+    document.body.style.overflow = 'hidden';
 
     // Populate Header
     document.getElementById('sdTitle').textContent = `📊 Stock History: ${stock}`;
@@ -1661,11 +1852,11 @@ function openStockDetail(stock, startDateStr, endDateStr) {
 }
 
 function closeStockDetail() {
-    const mainContainer = document.querySelector('.container');
     const detailView = document.getElementById('stockDetailView');
 
     detailView.style.display = 'none';
-    if (mainContainer) mainContainer.style.display = '';
+    // Restore scrolling on the body
+    document.body.style.overflow = '';
 }
 
 function renderFullStockHistory(stock, startDateStr, endDateStr) {
@@ -1673,10 +1864,10 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
     const start = new Date(startDateStr + 'T00:00:00');
     const end = new Date(endDateStr + 'T00:00:00');
     
+    // Use local-date formatter — NOT toISOString() — to avoid UTC off-by-one shifts.
     let current = new Date(start);
     while (current <= end) {
-        const dateKey = current.toISOString().split('T')[0];
-        dates.push(dateKey);
+        dates.push(fmtDateLocalFromDate(current));
         current.setDate(current.getDate() + 1);
     }
 
@@ -1765,7 +1956,10 @@ function renderFullStockHistory(stock, startDateStr, endDateStr) {
     avgClose = avgClose / dataPoints.length;
     
     // For closed trades, use actual SoldPrice from row; for holding, use last close
-    const tradeRowForPnl = filteredRows().find(r => r.StockName === stock && boughtDateKey(r) === startDateStr);
+    const tradeRowForPnl = filteredRows().find(r =>
+        String(r.StockName||'').toUpperCase() === String(stock||'').toUpperCase() &&
+        boughtDateKey(r) === startDateStr
+    );
     const actualSoldPrice = (tradeRowForPnl && isClosed(tradeRowForPnl)) ? parseNum(tradeRowForPnl['SoldPrice']) : 0;
     const currentPrice = actualSoldPrice > 0 ? actualSoldPrice : (soldPrice || dataPoints[dataPoints.length-1]?.data.close || 0);
     const isClosedTrade = (tradeRowForPnl && isClosed(tradeRowForPnl));
@@ -1951,77 +2145,182 @@ function renderDailyLedger(){
 /* PART 11: PERFORMANCE */
 
 function renderPerformance(){
-    const all=filteredRows();
     const closed=filteredClosed();
     const holding=filteredHolding();
-    const cWins=closed.filter(r=>pnlRowExcel(r)>0);
-    const cLosses=closed.filter(r=>pnlRowExcel(r)<0);
-    const cWinAmt=cWins.reduce((s,r)=>s+pnlRowExcel(r),0);
-    const cLossAmt=Math.abs(cLosses.reduce((s,r)=>s+pnlRowExcel(r),0));
-    const cNet=cWinAmt-cLossAmt;
-    
+
+    // ── CLOSED trade stats ────────────────────────────────────────────────
+    const cPnls = closed.map(r => pnlRowExcel(r));
+    const cWins = closed.filter(r => pnlRowExcel(r) > 0);
+    const cLosses = closed.filter(r => pnlRowExcel(r) < 0);
+    const cWinAmt = cWins.reduce((s,r) => s + pnlRowExcel(r), 0);
+    const cLossAmt = Math.abs(cLosses.reduce((s,r) => s + pnlRowExcel(r), 0));
+    const cNet = cWinAmt - cLossAmt;
     const cAvgGain = cWins.length ? cWinAmt / cWins.length : 0;
     const cAvgLoss = cLosses.length ? cLossAmt / cLosses.length : 0;
     const cRatio = cLossAmt > 0 ? (cWinAmt / cLossAmt) : (cWinAmt > 0 ? 99 : 0);
+    const cWinRate = closed.length ? (cWins.length / closed.length * 100) : 0;
 
-    document.getElementById('closedPerfStats').innerHTML=`
-        <div class="stat"><div class="label">Trades</div><div class="value">${closed.length}</div></div>
-        <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Wins</div><div class="value" style="color:#059669;">&#x2705; ${cWins.length}</div></div>
-        <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Losses</div><div class="value" style="color:#dc2626;">&#x274C; ${cLosses.length}</div></div>
-        <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Avg Gain</div><div class="value" style="color:#059669;">+${fmtCur(cAvgGain)}</div></div>
-        <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Avg Loss</div><div class="value" style="color:#dc2626;">-${fmtCur(cAvgLoss)}</div></div>
-        <div class="stat" style="background:${cRatio>=1?'linear-gradient(135deg,#ecfdf5,#d1fae5)':'linear-gradient(135deg,#fef2f2,#fee2e2)'};border-color:${cRatio>=1?'#10b981':'#ef4444'};"><div class="label">Profit Factor</div><div class="value" style="color:${cRatio>=1?'#059669':'#dc2626'};">${cRatio.toFixed(2)}</div></div>
-        <div class="stat" style="background:${cNet>=0?'linear-gradient(135deg,#ecfdf5,#d1fae5)':'linear-gradient(135deg,#fef2f2,#fee2e2)'};border-color:${cNet>=0?'#10b981':'#ef4444'};box-shadow:0 4px 12px ${cNet>=0?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'};"><div class="label" style="font-weight:900;">Net P&L</div><div class="value" style="color:${cNet>=0?'#059669':'#dc2626'};font-size:22px;">${cNet>=0?'+':''}${fmtCur(cNet)}</div></div>`;
-        
-    const hWins=holding.filter(r=>pnlRowExcel(r)>0);
-    const hLosses=holding.filter(r=>pnlRowExcel(r)<0);
-    const hWinAmt=hWins.reduce((s,r)=>s+pnlRowExcel(r),0);
-    const hLossAmt=Math.abs(hLosses.reduce((s,r)=>s+pnlRowExcel(r),0));
-    const hNet=hWinAmt-hLossAmt;
-    
+    let cBest = null, cBestV = -Infinity, cWorst = null, cWorstV = Infinity;
+    closed.forEach(r => {
+        const v = pnlRowExcel(r);
+        if(v > cBestV) { cBestV = v; cBest = r; }
+        if(v < cWorstV) { cWorstV = v; cWorst = r; }
+    });
+
+    const durations = closed.map(r => parseNum(r.Duration)).filter(d => d > 0);
+    const avgDuration = durations.length ? (durations.reduce((a,b)=>a+b,0) / durations.length) : 0;
+
+    // ── HOLDING trade stats ───────────────────────────────────────────────
+    const hWins = holding.filter(r => pnlRowExcel(r) > 0);
+    const hLosses = holding.filter(r => pnlRowExcel(r) < 0);
+    const hWinAmt = hWins.reduce((s,r) => s + pnlRowExcel(r), 0);
+    const hLossAmt = Math.abs(hLosses.reduce((s,r) => s + pnlRowExcel(r), 0));
+    const hNet = hWinAmt - hLossAmt;
     const hAvgGain = hWins.length ? hWinAmt / hWins.length : 0;
     const hAvgLoss = hLosses.length ? hLossAmt / hLosses.length : 0;
+    const hHitRate = holding.length ? (hWins.length / holding.length * 100) : 0;
 
-    document.getElementById('holdPerfStats').innerHTML=`
-        <div class="stat"><div class="label">Active Trades</div><div class="value">${holding.length}</div></div>
-        <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">In Profit</div><div class="value" style="color:#059669;">&#x2705; ${hWins.length}</div></div>
-        <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">In Loss</div><div class="value" style="color:#dc2626;">&#x274C; ${hLosses.length}</div></div>
-        <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Avg Profit</div><div class="value" style="color:#059669;">+${fmtCur(hAvgGain)}</div></div>
-        <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Avg Loss</div><div class="value" style="color:#dc2626;">-${fmtCur(hAvgLoss)}</div></div>
-        <div class="stat" style="background:${hNet>=0?'linear-gradient(135deg,#ecfdf5,#d1fae5)':'linear-gradient(135deg,#fef2f2,#fee2e2)'};border-color:${hNet>=0?'#10b981':'#ef4444'};box-shadow:0 4px 12px ${hNet>=0?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'};"><div class="label" style="font-weight:900;">Unrealized P&L</div><div class="value" style="color:${hNet>=0?'#059669':'#dc2626'};font-size:22px;">${hNet>=0?'+':''}${fmtCur(hNet)}</div></div>`;
-        
-    const totalPnl=cNet+hNet;
-    document.getElementById('perfStatsOverview').innerHTML=`
-        <div class="stat" style="background:${(cNet+hNet)>=0?'linear-gradient(135deg,#ecfdf5,#d1fae5)':'linear-gradient(135deg,#fef2f2,#fee2e2)'};border-color:${(cNet+hNet)>=0?'#10b981':'#ef4444'};border-left:4px solid ${(cNet+hNet)>=0?'#10b981':'#ef4444'};box-shadow:0 4px 12px ${(cNet+hNet)>=0?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'};"><div class="label" style="font-weight:900;">Combined Net Ledger</div><div class="value" style="color:${(cNet+hNet)>=0?'#059669':'#dc2626'};font-size:22px;">${(cNet+hNet)>=0?'+':''}${fmtCur(cNet+hNet)}</div></div>
-        <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Total Win Amount</div><div class="value" style="color:#059669;">+${fmtCur(cWinAmt+hWinAmt)}</div></div>
-        <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Total Loss Amount</div><div class="value" style="color:#dc2626;">-${fmtCur(cLossAmt+hLossAmt)}</div></div>`;
-    updateDoughnut('closedWinLossChart',[`Wins (${cWins.length})`,`Losses (${cLosses.length})`],[cWins.length,cLosses.length],'closedWin');
-    updateDoughnut('holdWinLossChart',[`Profit (${hWins.length})`,`Loss (${hLosses.length})`],[hWins.length,hLosses.length],'holdWin');
-    document.getElementById('closedChartLabels').innerHTML=`<span class="green">Gain: ${fmtCur(cWinAmt)}</span> | <span class="red">Loss: ${fmtCur(cLossAmt)}</span>`;
-    document.getElementById('holdChartLabels').innerHTML=`<span class="green">Gain: ${fmtCur(hWinAmt)}</span> | <span class="red">Loss: ${fmtCur(hLossAmt)}</span>`;
-    
-    // Add export buttons
-    const perfExportHtml = `
-        <div style="margin-top:20px; padding:15px; background:#f1f5f9; border-radius:6px; border:2px solid #2563eb;">
-            <div style="text-align:center; font-weight:bold; margin-bottom:15px; color:#1d4ed8;">Export Performance Analysis</div>
-            <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
-                <button class="btn-sm" onclick="exportClosedPerformanceImage('${closed.length}', '${cWins.length}', '${cLosses.length}', '${fmtCur(cWinAmt)}', '${fmtCur(cLossAmt)}', '${fmtCur(cAvgGain)}', '${fmtCur(cAvgLoss)}', '${cRatio.toFixed(2)}', '${fmtCur(cNet)}')" style="background:#059669;">
-                    📸 Closed Performance Image
-                </button>
-                <button class="btn-sm" onclick="exportHoldPerformanceImage('${holding.length}', '${hWins.length}', '${hLosses.length}', '${fmtCur(hWinAmt)}', '${fmtCur(hLossAmt)}', '${fmtCur(hAvgGain)}', '${fmtCur(hAvgLoss)}', '${fmtCur(hNet)}')" style="background:#2563eb;">
-                    📸 Hold Performance Image
-                </button>
-            </div>
+    let hBest = null, hBestV = -Infinity, hWorst = null, hWorstV = Infinity;
+    holding.forEach(r => {
+        const v = pnlRowExcel(r);
+        if(v > hBestV) { hBestV = v; hBest = r; }
+        if(v < hWorstV) { hWorstV = v; hWorst = r; }
+    });
+
+    const holdingInv = holding.reduce((s,r) => {
+        const entry = parseNum(r.AvgBuyPrice) || parseNum(r.BuyClPrice);
+        return s + entry * qtyOf(r);
+    }, 0);
+
+    // ── OVERALL ────────────────────────────────────────────────────────────
+    const totalNet = cNet + hNet;
+    const totalWinAmt = cWinAmt + hWinAmt;
+    const totalLossAmt = cLossAmt + hLossAmt;
+    const totalTrades = closed.length + holding.length;
+    const overallWinRate = totalTrades ? ((cWins.length + hWins.length) / totalTrades * 100) : 0;
+
+    // ── HERO KPIs ─────────────────────────────────────────────────────────
+    const heroCls = totalNet >= 0 ? 'pos' : 'neg';
+    const heroSign = totalNet >= 0 ? '+' : '';
+    document.getElementById('perfHero').innerHTML = `
+        <div class="perf-hero-card feature ${heroCls}">
+            <div class="phc-label">Combined Net Ledger (Realized + Unrealized)</div>
+            <div class="phc-value">${heroSign}${fmtCur(totalNet)}</div>
+            <div class="phc-sub">${closed.length} closed · ${holding.length} holding · ${totalTrades} total</div>
+        </div>
+        <div class="perf-hero-card pos">
+            <div class="phc-label">Total Win Amount</div>
+            <div class="phc-value">+${fmtCur(totalWinAmt)}</div>
+            <div class="phc-sub">${cWins.length + hWins.length} profitable trade(s)</div>
+        </div>
+        <div class="perf-hero-card neg">
+            <div class="phc-label">Total Loss Amount</div>
+            <div class="phc-value">-${fmtCur(totalLossAmt)}</div>
+            <div class="phc-sub">${cLosses.length + hLosses.length} losing trade(s)</div>
+        </div>
+        <div class="perf-hero-card ${overallWinRate>=50?'pos':'neg'}">
+            <div class="phc-label">Overall Win Rate</div>
+            <div class="phc-value">${overallWinRate.toFixed(1)}%</div>
+            <div class="phc-sub">${cWins.length + hWins.length} / ${totalTrades} wins</div>
+        </div>
+        <div class="perf-hero-card">
+            <div class="phc-label">Avg Hold Duration</div>
+            <div class="phc-value">${avgDuration.toFixed(1)} d</div>
+            <div class="phc-sub">across closed trades</div>
         </div>
     `;
-    
-    const perfContainer = document.getElementById('perfStatsOverview').parentElement;
-    if(perfContainer && !perfContainer.querySelector('.perf-export-section')) {
-        const exportDiv = document.createElement('div');
-        exportDiv.className = 'perf-export-section';
-        exportDiv.innerHTML = perfExportHtml;
-        perfContainer.appendChild(exportDiv);
+
+    // ── CLOSED PANEL KPIs ─────────────────────────────────────────────────
+    document.getElementById('closedPanelSub').textContent =
+        `${closed.length} trade${closed.length!==1?'s':''}`;
+    document.getElementById('closedPerfStats').innerHTML = `
+        <div class="perf-kpi accent"><div class="kpi-label">Trades</div><div class="kpi-value">${closed.length}</div></div>
+        <div class="perf-kpi pos"><div class="kpi-label">Wins</div><div class="kpi-value">✅ ${cWins.length}</div></div>
+        <div class="perf-kpi neg"><div class="kpi-label">Losses</div><div class="kpi-value">❌ ${cLosses.length}</div></div>
+        <div class="perf-kpi ${cWinRate>=50?'pos':'neg'}"><div class="kpi-label">Win Rate</div><div class="kpi-value">${cWinRate.toFixed(1)}%</div></div>
+        <div class="perf-kpi pos"><div class="kpi-label">Avg Gain</div><div class="kpi-value">+${fmtCur(cAvgGain)}</div></div>
+        <div class="perf-kpi neg"><div class="kpi-label">Avg Loss</div><div class="kpi-value">-${fmtCur(cAvgLoss)}</div></div>
+        <div class="perf-kpi ${cRatio>=1?'pos':'neg'}"><div class="kpi-label">Profit Factor</div><div class="kpi-value">${cRatio.toFixed(2)}</div></div>
+        <div class="perf-kpi pos"><div class="kpi-label">Best Trade</div><div class="kpi-value">${cBest?('+'+fmtCur(cBestV)):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${cBest?cBest.StockName:''}</div></div></div>
+        <div class="perf-kpi neg"><div class="kpi-label">Worst Trade</div><div class="kpi-value">${cWorst?fmtCur(cWorstV):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${cWorst?cWorst.StockName:''}</div></div></div>
+        <div class="perf-kpi big ${cNet>=0?'pos':'neg'}"><div class="kpi-label">Realized P&amp;L</div><div class="kpi-value">${cNet>=0?'+':''}${fmtCur(cNet)}</div></div>
+    `;
+
+    // ── HOLDING PANEL KPIs ────────────────────────────────────────────────
+    document.getElementById('holdPanelSub').textContent =
+        `${holding.length} position${holding.length!==1?'s':''}`;
+    document.getElementById('holdPerfStats').innerHTML = `
+        <div class="perf-kpi accent"><div class="kpi-label">Active Trades</div><div class="kpi-value">${holding.length}</div></div>
+        <div class="perf-kpi pos"><div class="kpi-label">In Profit</div><div class="kpi-value">✅ ${hWins.length}</div></div>
+        <div class="perf-kpi neg"><div class="kpi-label">In Loss</div><div class="kpi-value">❌ ${hLosses.length}</div></div>
+        <div class="perf-kpi ${hHitRate>=50?'pos':'neg'}"><div class="kpi-label">Hit Rate</div><div class="kpi-value">${hHitRate.toFixed(1)}%</div></div>
+        <div class="perf-kpi pos"><div class="kpi-label">Avg Profit</div><div class="kpi-value">+${fmtCur(hAvgGain)}</div></div>
+        <div class="perf-kpi neg"><div class="kpi-label">Avg Loss</div><div class="kpi-value">-${fmtCur(hAvgLoss)}</div></div>
+        <div class="perf-kpi accent"><div class="kpi-label">Invested</div><div class="kpi-value">${fmtCur(holdingInv)}</div></div>
+        <div class="perf-kpi pos"><div class="kpi-label">Biggest Gainer</div><div class="kpi-value">${hBest?('+'+fmtCur(hBestV)):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${hBest?hBest.StockName:''}</div></div></div>
+        <div class="perf-kpi neg"><div class="kpi-label">Biggest Loser</div><div class="kpi-value">${hWorst?fmtCur(hWorstV):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${hWorst?hWorst.StockName:''}</div></div></div>
+        <div class="perf-kpi big ${hNet>=0?'pos':'neg'}"><div class="kpi-label">Unrealized P&amp;L</div><div class="kpi-value">${hNet>=0?'+':''}${fmtCur(hNet)}</div></div>
+    `;
+
+    // ── CHARTS ────────────────────────────────────────────────────────────
+    updateDoughnut('closedWinLossChart', [`Wins (${cWins.length})`, `Losses (${cLosses.length})`], [cWins.length, cLosses.length], 'closedWin');
+    updateDoughnut('holdWinLossChart',   [`Profit (${hWins.length})`, `Loss (${hLosses.length})`], [hWins.length, hLosses.length], 'holdWin');
+    updateTopPnlBarChart('closedChart', closed, 'closedBar');
+    updateTopPnlBarChart('holdChart',   holding, 'holdBar');
+
+    document.getElementById('closedChartLabels').innerHTML =
+        `<span class="green">Gain: +${fmtCur(cWinAmt)}</span><span>|</span><span class="red">Loss: -${fmtCur(cLossAmt)}</span>`;
+    document.getElementById('holdChartLabels').innerHTML =
+        `<span class="green">Gain: +${fmtCur(hWinAmt)}</span><span>|</span><span class="red">Loss: -${fmtCur(hLossAmt)}</span>`;
+
+    // ── EXPORT BUTTONS (in header) ────────────────────────────────────────
+    document.getElementById('perfExportButtons').innerHTML = `
+        <button class="btn-sm" onclick="exportClosedPerformanceImage('${closed.length}', '${cWins.length}', '${cLosses.length}', '${fmtCur(cWinAmt)}', '${fmtCur(cLossAmt)}', '${fmtCur(cAvgGain)}', '${fmtCur(cAvgLoss)}', '${cRatio.toFixed(2)}', '${fmtCur(cNet)}')" style="background:#059669; color:#fff; padding:7px 13px; border:none; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">📸 Closed Perf Image</button>
+        <button class="btn-sm" onclick="exportHoldPerformanceImage('${holding.length}', '${hWins.length}', '${hLosses.length}', '${fmtCur(hWinAmt)}', '${fmtCur(hLossAmt)}', '${fmtCur(hAvgGain)}', '${fmtCur(hAvgLoss)}', '${fmtCur(hNet)}')" style="background:#2563eb; color:#fff; padding:7px 13px; border:none; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">📸 Hold Perf Image</button>
+    `;
+}
+
+// Horizontal bar chart of top P&L movers (top winners in green, top losers in red).
+function updateTopPnlBarChart(canvasId, rows, chartRef) {
+    const ctx = document.getElementById(canvasId);
+    if(!ctx) return;
+    if(charts[chartRef]) charts[chartRef].destroy();
+
+    if(!rows || !rows.length) {
+        charts[chartRef] = new Chart(ctx, {
+            type:'bar',
+            data:{labels:['No data'], datasets:[{data:[0], backgroundColor:'#cbd5e1'}]},
+            options:{indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}
+        });
+        return;
     }
+
+    const scored = rows.map(r => ({name: r.StockName, pnl: pnlRowExcel(r)}))
+                       .filter(x => isFinite(x.pnl));
+    const winners = scored.filter(x => x.pnl > 0).sort((a,b)=>b.pnl-a.pnl).slice(0,5);
+    const losers  = scored.filter(x => x.pnl < 0).sort((a,b)=>a.pnl-b.pnl).slice(0,5).reverse();
+    const merged = [...losers, ...winners];
+    const labels = merged.map(x => x.name);
+    const data   = merged.map(x => x.pnl);
+    const colors = merged.map(x => x.pnl >= 0 ? '#10b981' : '#ef4444');
+
+    charts[chartRef] = new Chart(ctx, {
+        type:'bar',
+        data:{ labels, datasets:[{data, backgroundColor:colors, borderWidth:0}] },
+        options:{
+            indexAxis:'y',
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:false},
+                tooltip:{callbacks:{label:(c)=>fmtCur(c.raw)}}
+            },
+            scales:{
+                x:{ticks:{color:'#64748b', callback:(v)=>fmtCur(v)}, grid:{color:'#e2e8f0'}},
+                y:{ticks:{color:'#334155', font:{weight:'bold'}}}
+            }
+        }
+    });
 }
 
 function updateDoughnut(canvasId,labels,data,chartRef){
