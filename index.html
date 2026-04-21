@@ -143,10 +143,12 @@ select:focus,input:focus{border-color:var(--blue2);outline:none;box-shadow:0 0 0
 .history-table tr:hover td{background:#eff6ff;}
 
 /* TOAST */
-#toast-container{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
-.toast{padding:11px 18px;border-radius:9px;font-weight:700;font-size:13px;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:slideIn .3s ease;}
+#toast-container{position:fixed;bottom:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:6px;max-width:300px;pointer-events:none;}
+.toast{padding:8px 12px;border-radius:8px;font-weight:600;font-size:12px;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.18);animation:slideIn .25s ease;max-width:300px;word-wrap:break-word;display:flex;align-items:center;gap:6px;pointer-events:auto;}
 .toast.success{background:linear-gradient(135deg,#059669,#10b981);}.toast.error{background:linear-gradient(135deg,#dc2626,#ef4444);}.toast.info{background:linear-gradient(135deg,var(--blue2),var(--cyan2));}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:none;opacity:1}}
+.toast .count-badge{background:rgba(255,255,255,.25);padding:1px 7px;border-radius:10px;font-size:11px;font-weight:800;}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+@keyframes fadeOut{to{opacity:0;transform:translateX(30%)}}
 
 /* STOCK DETAIL OVERLAY */
 #stockDetailView{position:fixed;inset:0;background:rgba(13,31,60,.6);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
@@ -2426,16 +2428,52 @@ function renderAll(){
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     if (!container) return;
+    const MAX_TOASTS = 3;
+    const TOAST_MS = 1800;
+    const key = type + '|' + message;
+
+    // De-dupe: if an identical toast is already on screen, just bump its count and reset its timer.
+    const existing = container.querySelector(`.toast[data-key="${CSS.escape(key)}"]`);
+    if (existing) {
+        const badge = existing.querySelector('.count-badge');
+        const n = (parseInt(badge && badge.dataset.n, 10) || 1) + 1;
+        if (badge) {
+            badge.textContent = '\u00d7' + n;
+            badge.dataset.n = n;
+        } else {
+            const b = document.createElement('span');
+            b.className = 'count-badge';
+            b.dataset.n = n;
+            b.textContent = '\u00d7' + n;
+            existing.appendChild(b);
+        }
+        if (existing._dismissTimer) clearTimeout(existing._dismissTimer);
+        existing._dismissTimer = setTimeout(() => dismissToast(existing, container), TOAST_MS);
+        return;
+    }
+
+    // Cap: while there are too many toasts, drop the oldest.
+    while (container.children.length >= MAX_TOASTS) {
+        dismissToast(container.firstChild, container, /*immediate*/true);
+    }
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${message}</span>`;
+    toast.dataset.key = key;
+    toast.innerHTML = `<span style="flex:1;">${message}</span>`;
     container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s forwards';
-        toast.addEventListener('animationend', () => {
-            if (container.contains(toast)) container.removeChild(toast);
-        });
-    }, 3000);
+    toast._dismissTimer = setTimeout(() => dismissToast(toast, container), TOAST_MS);
+    toast.addEventListener('click', () => dismissToast(toast, container, true));
+}
+
+function dismissToast(toast, container, immediate) {
+    if (!toast || !container || !container.contains(toast)) return;
+    if (toast._dismissTimer) { clearTimeout(toast._dismissTimer); toast._dismissTimer = null; }
+    if (immediate) { container.removeChild(toast); return; }
+    toast.style.animation = 'fadeOut 0.25s forwards';
+    const cleanup = () => { if (container.contains(toast)) container.removeChild(toast); };
+    toast.addEventListener('animationend', cleanup, { once: true });
+    setTimeout(cleanup, 400);
 }
 
 function exportAll() {
