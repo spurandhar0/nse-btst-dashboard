@@ -684,8 +684,12 @@ function resetDateRange(){
 function filteredRows(){
     // Always exclude Invalid rows from all tabs — they appear only in overview counter
     const validRows = allRows.filter(r => !isInvalid(r));
-    if(!selectedDate)return validRows;
-    let rows=validRows.filter(r=>{const d=predDateKey(r);return d&&dateLE(d,selectedDate)});
+    let rows = validRows;
+    // Apply Signal Date filter (if specific date selected, not "All Dates")
+    if(selectedDate){
+        rows=rows.filter(r=>{const d=predDateKey(r);return d&&dateLE(d,selectedDate)});
+    }
+    // Apply Date Range filter (always applied when active, regardless of Signal Date setting)
     if(dateRangeActive&&fromDateGlobal&&toDateGlobal){
         rows=rows.filter(r=>{const d=predDateKey(r);return d&&dateLE(fromDateGlobal,d)&&dateLE(d,toDateGlobal)})
     }
