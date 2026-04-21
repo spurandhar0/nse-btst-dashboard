@@ -616,6 +616,14 @@ function normalizeDateKey(x){
 
 function toDateStr(x){return normalizeDateKey(x)}
 function dateLE(a,b){return new Date(a+'T00:00:00')<=new Date(b+'T00:00:00')}
+function dateInRange(dateStr, fromISO, toISO){
+    // dateStr is in DD-MM-YYYY format from Excel, convert to YYYY-MM-DD for comparison
+    if(!dateStr) return false;
+    const parts=dateStr.split('-');
+    if(parts.length!==3) return false;
+    const isoDate=`${parts[2]}-${parts[1]}-${parts[0]}`;
+    return dateLE(fromISO,isoDate)&&dateLE(isoDate,toISO);
+}
 function predDateKey(r){return normalizeDateKey(r['BuyDate'])}
 function isInvalid(r){return String(r['Order']||'').trim().toLowerCase()==='invalid'}
 function isPending(r){return String(r['Order']||'').trim().toLowerCase()==='pending'}
@@ -647,21 +655,22 @@ function applyDateRange(){
     const toDate=document.getElementById('toDate').value;
     if(!fromDate||!toDate){showToast('Please select both From Date and To Date', 'error');return}
     if(new Date(fromDate)>new Date(toDate)){showToast('From Date cannot be greater than To Date', 'error');return}
-    // Convert ISO format (YYYY-MM-DD) to DD-MM-YYYY for consistency with data
-    const [fY,fM,fD]=fromDate.split('-');
-    const [tY,tM,tD]=toDate.split('-');
-    fromDateGlobal=`${fD}-${fM}-${fY}`;
-    toDateGlobal=`${tD}-${tM}-${tY}`;
+    // Store ISO dates for filtering (dateLE function expects ISO format)
+    fromDateGlobal=fromDate;
+    toDateGlobal=toDate;
     dateRangeActive=true;
     const filterPill=document.getElementById('filterPill');
     const days=Math.ceil((new Date(toDate)-new Date(fromDate))/(1000*60*60*24))+1;
-    filterPill.textContent=`📅 ${fromDateGlobal} to ${toDateGlobal} (${days} days)`;
+    // Display in DD-MM-YYYY format
+    const [fY,fM,fD]=fromDate.split('-');
+    const [tY,tM,tD]=toDate.split('-');
+    filterPill.textContent=`📅 ${fD}-${fM}-${fY} to ${tD}-${tM}-${tY} (${days} days)`;
     filterPill.style.color='#2563eb';
     filterPill.style.borderColor='#2563eb';
     filterPill.style.background='rgba(37, 99, 235, 0.1)';
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
     renderAll();
-    showToast(`✅ Filter Applied: ${fromDate} to ${toDate}`, 'success');
+    showToast(`✅ Filter Applied: ${fD}-${fM}-${fY} to ${tD}-${tM}-${tY}`, 'success');
 }
 
 function resetDateRange(){
@@ -694,7 +703,7 @@ function filteredRows(){
     }
     // Apply Date Range filter (always applied when active, regardless of Signal Date setting)
     if(dateRangeActive&&fromDateGlobal&&toDateGlobal){
-        rows=rows.filter(r=>{const d=predDateKey(r);return d&&dateLE(fromDateGlobal,d)&&dateLE(d,toDateGlobal)})
+        rows=rows.filter(r=>{const d=predDateKey(r);return d&&dateInRange(d,fromDateGlobal,toDateGlobal)})
     }
     return rows
 }
