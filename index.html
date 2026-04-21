@@ -196,7 +196,8 @@ select:focus,input:focus{border-color:var(--blue2);outline:none;box-shadow:0 0 0
 .perf-kpi.accent .kpi-value{color:#1d4ed8;}
 .perf-kpi.big .kpi-value{font-size:18px;}
 
-.perf-chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.perf-chart-row{display:grid;grid-template-columns:1fr 1.3fr;gap:14px;align-items:stretch;}
+@media(max-width:900px){.perf-chart-row{grid-template-columns:1fr;}}
 .perf-chart-box{background:var(--surface2);border:1px solid var(--surface3);border-radius:10px;padding:11px;}
 .perf-chart-title{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;}
 .perf-chart-labels{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;font-size:11px;justify-content:center;}
@@ -300,7 +301,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
     <div style="font-size:11px;color:var(--text3);">If this persists, the workflow may not have run yet today</div>
   </div>
   <div id="overviewStats" class="stat-grid" style="display:none;"></div>
-  <div class="chart-box" id="cumChartBox" style="display:none;"><canvas id="cumChart"></canvas></div>
+  <div class="chart-box" id="cumChartBox" style="display:none;"><div id="cumChartHolder" style="height:340px;position:relative;"><canvas id="cumChart"></canvas></div></div>
 </div>
 
 <div id="calls" class="card hidden">
@@ -399,12 +400,12 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
         <div class="perf-chart-row">
           <div class="perf-chart-box">
             <div class="perf-chart-title">Win / Loss Split</div>
-            <div style="height:180px;"><canvas id="closedWinLossChart"></canvas></div>
+            <div class="perf-chart-canvas" style="height:240px;position:relative;"><canvas id="closedWinLossChart"></canvas></div>
             <div id="closedChartLabels" class="perf-chart-labels"></div>
           </div>
           <div class="perf-chart-box">
             <div class="perf-chart-title">Top Closed P&amp;L</div>
-            <div style="height:180px;"><canvas id="closedChart"></canvas></div>
+            <div id="closedChartHolder" class="perf-chart-canvas" style="height:320px;position:relative;"><canvas id="closedChart"></canvas></div>
           </div>
         </div>
       </div>
@@ -420,12 +421,12 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
         <div class="perf-chart-row">
           <div class="perf-chart-box">
             <div class="perf-chart-title">Profit / Loss Split</div>
-            <div style="height:180px;"><canvas id="holdWinLossChart"></canvas></div>
+            <div class="perf-chart-canvas" style="height:240px;position:relative;"><canvas id="holdWinLossChart"></canvas></div>
             <div id="holdChartLabels" class="perf-chart-labels"></div>
           </div>
           <div class="perf-chart-box">
             <div class="perf-chart-title">Top Holding P&amp;L</div>
-            <div style="height:180px;"><canvas id="holdChart"></canvas></div>
+            <div id="holdChartHolder" class="perf-chart-canvas" style="height:320px;position:relative;"><canvas id="holdChart"></canvas></div>
           </div>
         </div>
       </div>
@@ -672,7 +673,10 @@ const els={file:document.getElementById('file'),fileInfo:document.getElementById
 
 function parseNum(v){if(!v)return 0;const n=parseFloat(String(v).replace(/,/g,''));return isNaN(n)?0:n}
 function fmtCur(v){return '₹'+parseNum(v).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtCurR(v){return '₹'+Math.round(parseNum(v)).toLocaleString('en-IN')}
+function fmtNumR(v){return Math.round(parseNum(v)).toLocaleString('en-IN')}
 function fmtPct(v){return parseNum(v).toFixed(2)+'%'}
+function fmtPctR(v){return Math.round(parseNum(v))+'%'}
 function colorCls(x){const n=parseNum(x);return n>0?'green':(n<0?'red':'')}
 function setLoading(show,text='Loading…'){if(show){els.loading.classList.remove('hidden');els.loadingText.textContent=text}else els.loading.classList.add('hidden')}
 function pad2(n){return String(n).padStart(2,'0')}
@@ -1366,7 +1370,7 @@ function renderOverview(){
         const vSize=big?'26px':'20px';
         const lSize=big?'13px':'11px';
         const shadow=big?`box-shadow:0 6px 18px ${border}55;`:'';
-        return `<div class="stat" style="background:${bg};border-color:${border};${shadow}"><div class="label" style="font-size:${lSize};font-weight:900;">${label}</div><div class="value" style="color:${color};font-size:${vSize};">${prefix}${fmtCur(val)}</div></div>`;
+        return `<div class="stat" style="background:${bg};border-color:${border};${shadow}"><div class="label" style="font-size:${lSize};font-weight:900;">${label}</div><div class="value" style="color:${color};font-size:${vSize};">${prefix}${fmtCurR(val)}</div></div>`;
     };
     const numCard=(label,val,color)=>`<div class="stat"><div class="label">${label}</div><div class="value"${color?` style="color:${color};"`:''}>${val}</div></div>`;
 
@@ -1378,18 +1382,18 @@ function renderOverview(){
         <div style="background:${heroBg};padding:22px 28px;border-radius:14px;margin-bottom:18px;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:18px;align-items:center;color:#fff;box-shadow:0 8px 24px ${heroColor}44;">
             <div>
                 <div style="font-size:12px;font-weight:700;opacity:.85;letter-spacing:.5px;">📊 OVERALL NET P&L</div>
-                <div style="font-size:32px;font-weight:900;margin-top:4px;">${heroPrefix}${fmtCur(totalPnl)}</div>
+                <div style="font-size:32px;font-weight:900;margin-top:4px;">${heroPrefix}${fmtCurR(totalPnl)}</div>
                 <div style="font-size:11px;opacity:.9;margin-top:2px;">${rows.length} trades · ${closed.length} closed · ${holding.length} holding</div>
             </div>
             <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:16px;">
                 <div style="font-size:11px;font-weight:700;opacity:.85;">💼 ACTIVE P&L</div>
-                <div style="font-size:20px;font-weight:900;">${activePnl>=0?'+':''}${fmtCur(activePnl)}</div>
-                <div style="font-size:11px;opacity:.85;margin-top:2px;">Invested: ${fmtCur(activeInvested)}</div>
+                <div style="font-size:20px;font-weight:900;">${activePnl>=0?'+':''}${fmtCurR(activePnl)}</div>
+                <div style="font-size:11px;opacity:.85;margin-top:2px;">Invested: ${fmtCurR(activeInvested)}</div>
             </div>
             <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:16px;">
                 <div style="font-size:11px;font-weight:700;opacity:.85;">✅ CLOSED P&L</div>
-                <div style="font-size:20px;font-weight:900;">${closedPnl>=0?'+':''}${fmtCur(closedPnl)}</div>
-                <div style="font-size:11px;opacity:.85;margin-top:2px;">Win Rate: ${closedWinRate.toFixed(1)}% (${closedWins}W/${closedLosses}L)</div>
+                <div style="font-size:20px;font-weight:900;">${closedPnl>=0?'+':''}${fmtCurR(closedPnl)}</div>
+                <div style="font-size:11px;opacity:.85;margin-top:2px;">Win Rate: ${Math.round(closedWinRate)}% (${closedWins}W/${closedLosses}L)</div>
             </div>
             <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:16px;">
                 <div style="font-size:11px;font-weight:700;opacity:.85;">📅 SIGNAL DATE</div>
@@ -1411,9 +1415,9 @@ function renderOverview(){
 
         <div style="margin-bottom:8px;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:.3px;">💰 PORTFOLIO & P&L</div>
         <div class="stat-grid" style="margin-bottom:18px;">
-            <div class="stat"><div class="label">Active Invested</div><div class="value" style="color:#2563eb;">${fmtCur(activeInvested)}</div></div>
-            <div class="stat"><div class="label">Market Value</div><div class="value" style="color:#0891b2;">${fmtCur(activeMktVal)}</div></div>
-            <div class="stat"><div class="label">Closed Invested</div><div class="value" style="color:#64748b;">${fmtCur(closedInvested)}</div></div>
+            <div class="stat"><div class="label">Active Invested</div><div class="value" style="color:#2563eb;">${fmtCurR(activeInvested)}</div></div>
+            <div class="stat"><div class="label">Market Value</div><div class="value" style="color:#0891b2;">${fmtCurR(activeMktVal)}</div></div>
+            <div class="stat"><div class="label">Closed Invested</div><div class="value" style="color:#64748b;">${fmtCurR(closedInvested)}</div></div>
             ${pnlCard('Active P&L', activePnl)}
             ${pnlCard('Closed P&L', closedPnl)}
             ${pnlCard('Overall P&L', totalPnl, true)}
@@ -1421,13 +1425,13 @@ function renderOverview(){
 
         <div style="margin-bottom:8px;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:.3px;">🎯 CLOSED TRADE QUALITY</div>
         <div class="stat-grid" style="margin-bottom:6px;">
-            <div class="stat"><div class="label">Win Rate</div><div class="value" style="color:${closedWinRate>=50?'#059669':'#dc2626'};">${closedWinRate.toFixed(1)}%</div></div>
+            <div class="stat"><div class="label">Win Rate</div><div class="value" style="color:${closedWinRate>=50?'#059669':'#dc2626'};">${Math.round(closedWinRate)}%</div></div>
             <div class="stat"><div class="label">Wins / Losses</div><div class="value" style="font-size:18px;"><span style="color:#059669;">${closedWins}W</span> / <span style="color:#dc2626;">${closedLosses}L</span></div></div>
-            <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Gross Profit</div><div class="value" style="color:#059669;">+${fmtCur(grossProfit)}</div></div>
-            <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Gross Loss</div><div class="value" style="color:#dc2626;">${fmtCur(grossLoss)}</div></div>
-            <div class="stat"><div class="label">Avg Hold (days)</div><div class="value" style="color:#7c3aed;">${avgHoldDays.toFixed(1)}</div></div>
-            <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Best Trade</div><div class="value" style="color:#059669;font-size:16px;">${bestTrade?'+'+fmtCur(pnlRowExcel(bestTrade)):'—'}</div><div style="font-size:10px;color:#64748b;font-weight:700;margin-top:2px;">${nameOf(bestTrade)}</div></div>
-            <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Worst Trade</div><div class="value" style="color:#dc2626;font-size:16px;">${worstTrade?fmtCur(pnlRowExcel(worstTrade)):'—'}</div><div style="font-size:10px;color:#64748b;font-weight:700;margin-top:2px;">${nameOf(worstTrade)}</div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Gross Profit</div><div class="value" style="color:#059669;">+${fmtCurR(grossProfit)}</div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Gross Loss</div><div class="value" style="color:#dc2626;">${fmtCurR(grossLoss)}</div></div>
+            <div class="stat"><div class="label">Avg Hold (days)</div><div class="value" style="color:#7c3aed;">${Math.round(avgHoldDays)}</div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Best Trade</div><div class="value" style="color:#059669;font-size:16px;">${bestTrade?'+'+fmtCurR(pnlRowExcel(bestTrade)):'—'}</div><div style="font-size:10px;color:#64748b;font-weight:700;margin-top:2px;">${nameOf(bestTrade)}</div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Worst Trade</div><div class="value" style="color:#dc2626;font-size:16px;">${worstTrade?fmtCurR(pnlRowExcel(worstTrade)):'—'}</div><div style="font-size:10px;color:#64748b;font-weight:700;margin-top:2px;">${nameOf(worstTrade)}</div></div>
         </div>
     `;
     
@@ -1436,11 +1440,66 @@ function renderOverview(){
     function groupKey(dateStr){if(mode==='week')return weekKey(dateStr);if(mode==='month')return monthKey(dateStr);return dateStr}
     for(const r of rows){const d=predDateKey(r);if(!d)continue;const k=groupKey(d);map[k]=(map[k]||0)+pnlRowExcel(r)}
     const labels=Object.keys(map).sort();
+    const dailyPnl=labels.map(k=>map[k]);
     let cum=0;
     const values=labels.map(k=>(cum+=map[k]));
-    const ctx=document.getElementById('cumChart');
+    const peakIdx=values.indexOf(Math.max(...values,0));
+    const troughIdx=values.indexOf(Math.min(...values,0));
+
+    // chart summary strip above the canvas
+    const box=document.getElementById('cumChartBox');
+    let summary=box.querySelector('.cum-summary');
+    if(!summary){
+        summary=document.createElement('div');
+        summary.className='cum-summary';
+        summary.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;';
+        box.insertBefore(summary, box.firstChild);
+    }
+    const lastCum=values.length?values[values.length-1]:0;
+    const peakVal=values.length?values[peakIdx]:0;
+    const troughVal=values.length?values[troughIdx]:0;
+    const bestDay=labels[dailyPnl.indexOf(Math.max(...dailyPnl,0))]||'—';
+    const worstDay=labels[dailyPnl.indexOf(Math.min(...dailyPnl,0))]||'—';
+    const bestDayVal=Math.max(...dailyPnl,0);
+    const worstDayVal=Math.min(...dailyPnl,0);
+    summary.innerHTML=`
+        <div style="background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1.5px solid #6366f1;border-radius:10px;padding:10px 12px;"><div style="font-size:10px;font-weight:800;color:#4f46e5;letter-spacing:.3px;">CURRENT CUMULATIVE</div><div style="font-size:18px;font-weight:900;color:${lastCum>=0?'#059669':'#dc2626'};">${lastCum>=0?'+':''}${fmtCurR(lastCum)}</div><div style="font-size:10px;color:#64748b;font-weight:700;">${labels.length} ${mode==='week'?'weeks':mode==='month'?'months':'days'}</div></div>
+        <div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1.5px solid #10b981;border-radius:10px;padding:10px 12px;"><div style="font-size:10px;font-weight:800;color:#059669;letter-spacing:.3px;">📈 PEAK</div><div style="font-size:18px;font-weight:900;color:#059669;">+${fmtCurR(peakVal)}</div><div style="font-size:10px;color:#64748b;font-weight:700;">${labels[peakIdx]||'—'}</div></div>
+        <div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1.5px solid #ef4444;border-radius:10px;padding:10px 12px;"><div style="font-size:10px;font-weight:800;color:#dc2626;letter-spacing:.3px;">📉 TROUGH</div><div style="font-size:18px;font-weight:900;color:#dc2626;">${fmtCurR(troughVal)}</div><div style="font-size:10px;color:#64748b;font-weight:700;">${labels[troughIdx]||'—'}</div></div>
+        <div style="background:linear-gradient(135deg,#f1f5f9,#e2e8f0);border:1.5px solid #64748b;border-radius:10px;padding:10px 12px;"><div style="font-size:10px;font-weight:800;color:#334155;letter-spacing:.3px;">BEST / WORST ${mode==='week'?'WEEK':mode==='month'?'MONTH':'DAY'}</div><div style="font-size:13px;font-weight:900;"><span style="color:#059669;">+${fmtCurR(bestDayVal)}</span> / <span style="color:#dc2626;">${fmtCurR(worstDayVal)}</span></div><div style="font-size:10px;color:#64748b;font-weight:700;">${bestDay} · ${worstDay}</div></div>
+    `;
+
+    const canvas=document.getElementById('cumChart');
+    const ctx=canvas;
     if(charts.cum)charts.cum.destroy();
-    charts.cum=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Cumulative P&L',data:values,borderColor:'#2563eb',backgroundColor:'rgba(37, 99, 235,.15)',fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#334155'}}},scales:{x:{ticks:{color:'#64748b'}},y:{ticks:{color:'#64748b'}}}}})
+    const gradient=ctx.getContext('2d').createLinearGradient(0,0,0,340);
+    gradient.addColorStop(0,'rgba(37,99,235,0.35)');
+    gradient.addColorStop(1,'rgba(37,99,235,0.02)');
+    const barColors=dailyPnl.map(v=>v>=0?'rgba(16,185,129,0.65)':'rgba(239,68,68,0.65)');
+    charts.cum=new Chart(ctx,{
+        type:'bar',
+        data:{
+            labels,
+            datasets:[
+                {type:'line',label:'Cumulative P&L',data:values,borderColor:'#2563eb',backgroundColor:gradient,fill:true,tension:.35,borderWidth:3,pointRadius:3,pointBackgroundColor:'#2563eb',pointHoverRadius:6,yAxisID:'y'},
+                {type:'bar',label:`${mode==='week'?'Weekly':mode==='month'?'Monthly':'Daily'} P&L`,data:dailyPnl,backgroundColor:barColors,borderWidth:0,yAxisID:'y1',borderRadius:4}
+            ]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            interaction:{mode:'index',intersect:false},
+            plugins:{
+                legend:{labels:{color:'#334155',font:{weight:'bold',size:12},usePointStyle:true,padding:12}},
+                tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.raw>=0?'+':''}${fmtCurR(c.raw)}`}}
+            },
+            scales:{
+                x:{ticks:{color:'#64748b',maxRotation:0,autoSkip:true,maxTicksLimit:12},grid:{display:false}},
+                y:{position:'left',ticks:{color:'#2563eb',callback:(v)=>fmtCurR(v),font:{weight:'bold'}},grid:{color:'#e2e8f0'},title:{display:true,text:'Cumulative',color:'#2563eb',font:{weight:'bold',size:11}}},
+                y1:{position:'right',ticks:{color:'#64748b',callback:(v)=>fmtCurR(v)},grid:{display:false},title:{display:true,text:`${mode==='week'?'Weekly':mode==='month'?'Monthly':'Daily'}`,color:'#64748b',font:{weight:'bold',size:11}}}
+            }
+        }
+    });
 }
 
 function renderCalls(){
@@ -2208,27 +2267,27 @@ function renderPerformance(){
     document.getElementById('perfHero').innerHTML = `
         <div class="perf-hero-card feature ${heroCls}">
             <div class="phc-label">Combined Net Ledger (Realized + Unrealized)</div>
-            <div class="phc-value">${heroSign}${fmtCur(totalNet)}</div>
+            <div class="phc-value">${heroSign}${fmtCurR(totalNet)}</div>
             <div class="phc-sub">${closed.length} closed · ${holding.length} holding · ${totalTrades} total</div>
         </div>
         <div class="perf-hero-card pos">
             <div class="phc-label">Total Win Amount</div>
-            <div class="phc-value">+${fmtCur(totalWinAmt)}</div>
+            <div class="phc-value">+${fmtCurR(totalWinAmt)}</div>
             <div class="phc-sub">${cWins.length + hWins.length} profitable trade(s)</div>
         </div>
         <div class="perf-hero-card neg">
             <div class="phc-label">Total Loss Amount</div>
-            <div class="phc-value">-${fmtCur(totalLossAmt)}</div>
+            <div class="phc-value">-${fmtCurR(totalLossAmt)}</div>
             <div class="phc-sub">${cLosses.length + hLosses.length} losing trade(s)</div>
         </div>
         <div class="perf-hero-card ${overallWinRate>=50?'pos':'neg'}">
             <div class="phc-label">Overall Win Rate</div>
-            <div class="phc-value">${overallWinRate.toFixed(1)}%</div>
+            <div class="phc-value">${Math.round(overallWinRate)}%</div>
             <div class="phc-sub">${cWins.length + hWins.length} / ${totalTrades} wins</div>
         </div>
         <div class="perf-hero-card">
             <div class="phc-label">Avg Hold Duration</div>
-            <div class="phc-value">${avgDuration.toFixed(1)} d</div>
+            <div class="phc-value">${Math.round(avgDuration)} d</div>
             <div class="phc-sub">across closed trades</div>
         </div>
     `;
@@ -2240,13 +2299,13 @@ function renderPerformance(){
         <div class="perf-kpi accent"><div class="kpi-label">Trades</div><div class="kpi-value">${closed.length}</div></div>
         <div class="perf-kpi pos"><div class="kpi-label">Wins</div><div class="kpi-value">✅ ${cWins.length}</div></div>
         <div class="perf-kpi neg"><div class="kpi-label">Losses</div><div class="kpi-value">❌ ${cLosses.length}</div></div>
-        <div class="perf-kpi ${cWinRate>=50?'pos':'neg'}"><div class="kpi-label">Win Rate</div><div class="kpi-value">${cWinRate.toFixed(1)}%</div></div>
-        <div class="perf-kpi pos"><div class="kpi-label">Avg Gain</div><div class="kpi-value">+${fmtCur(cAvgGain)}</div></div>
-        <div class="perf-kpi neg"><div class="kpi-label">Avg Loss</div><div class="kpi-value">-${fmtCur(cAvgLoss)}</div></div>
-        <div class="perf-kpi ${cRatio>=1?'pos':'neg'}"><div class="kpi-label">Profit Factor</div><div class="kpi-value">${cRatio.toFixed(2)}</div></div>
-        <div class="perf-kpi pos"><div class="kpi-label">Best Trade</div><div class="kpi-value">${cBest?('+'+fmtCur(cBestV)):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${cBest?cBest.StockName:''}</div></div></div>
-        <div class="perf-kpi neg"><div class="kpi-label">Worst Trade</div><div class="kpi-value">${cWorst?fmtCur(cWorstV):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${cWorst?cWorst.StockName:''}</div></div></div>
-        <div class="perf-kpi big ${cNet>=0?'pos':'neg'}"><div class="kpi-label">Realized P&amp;L</div><div class="kpi-value">${cNet>=0?'+':''}${fmtCur(cNet)}</div></div>
+        <div class="perf-kpi ${cWinRate>=50?'pos':'neg'}"><div class="kpi-label">Win Rate</div><div class="kpi-value">${Math.round(cWinRate)}%</div></div>
+        <div class="perf-kpi pos"><div class="kpi-label">Avg Gain</div><div class="kpi-value">+${fmtCurR(cAvgGain)}</div></div>
+        <div class="perf-kpi neg"><div class="kpi-label">Avg Loss</div><div class="kpi-value">-${fmtCurR(cAvgLoss)}</div></div>
+        <div class="perf-kpi ${cRatio>=1?'pos':'neg'}"><div class="kpi-label">Profit Factor</div><div class="kpi-value">${Math.round(cRatio*10)/10}</div></div>
+        <div class="perf-kpi pos"><div class="kpi-label">Best Trade</div><div class="kpi-value">${cBest?('+'+fmtCurR(cBestV)):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${cBest?cBest.StockName:''}</div></div></div>
+        <div class="perf-kpi neg"><div class="kpi-label">Worst Trade</div><div class="kpi-value">${cWorst?fmtCurR(cWorstV):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${cWorst?cWorst.StockName:''}</div></div></div>
+        <div class="perf-kpi big ${cNet>=0?'pos':'neg'}"><div class="kpi-label">Realized P&amp;L</div><div class="kpi-value">${cNet>=0?'+':''}${fmtCurR(cNet)}</div></div>
     `;
 
     // ── HOLDING PANEL KPIs ────────────────────────────────────────────────
@@ -2256,13 +2315,13 @@ function renderPerformance(){
         <div class="perf-kpi accent"><div class="kpi-label">Active Trades</div><div class="kpi-value">${holding.length}</div></div>
         <div class="perf-kpi pos"><div class="kpi-label">In Profit</div><div class="kpi-value">✅ ${hWins.length}</div></div>
         <div class="perf-kpi neg"><div class="kpi-label">In Loss</div><div class="kpi-value">❌ ${hLosses.length}</div></div>
-        <div class="perf-kpi ${hHitRate>=50?'pos':'neg'}"><div class="kpi-label">Hit Rate</div><div class="kpi-value">${hHitRate.toFixed(1)}%</div></div>
-        <div class="perf-kpi pos"><div class="kpi-label">Avg Profit</div><div class="kpi-value">+${fmtCur(hAvgGain)}</div></div>
-        <div class="perf-kpi neg"><div class="kpi-label">Avg Loss</div><div class="kpi-value">-${fmtCur(hAvgLoss)}</div></div>
-        <div class="perf-kpi accent"><div class="kpi-label">Invested</div><div class="kpi-value">${fmtCur(holdingInv)}</div></div>
-        <div class="perf-kpi pos"><div class="kpi-label">Biggest Gainer</div><div class="kpi-value">${hBest?('+'+fmtCur(hBestV)):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${hBest?hBest.StockName:''}</div></div></div>
-        <div class="perf-kpi neg"><div class="kpi-label">Biggest Loser</div><div class="kpi-value">${hWorst?fmtCur(hWorstV):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${hWorst?hWorst.StockName:''}</div></div></div>
-        <div class="perf-kpi big ${hNet>=0?'pos':'neg'}"><div class="kpi-label">Unrealized P&amp;L</div><div class="kpi-value">${hNet>=0?'+':''}${fmtCur(hNet)}</div></div>
+        <div class="perf-kpi ${hHitRate>=50?'pos':'neg'}"><div class="kpi-label">Hit Rate</div><div class="kpi-value">${Math.round(hHitRate)}%</div></div>
+        <div class="perf-kpi pos"><div class="kpi-label">Avg Profit</div><div class="kpi-value">+${fmtCurR(hAvgGain)}</div></div>
+        <div class="perf-kpi neg"><div class="kpi-label">Avg Loss</div><div class="kpi-value">-${fmtCurR(hAvgLoss)}</div></div>
+        <div class="perf-kpi accent"><div class="kpi-label">Invested</div><div class="kpi-value">${fmtCurR(holdingInv)}</div></div>
+        <div class="perf-kpi pos"><div class="kpi-label">Biggest Gainer</div><div class="kpi-value">${hBest?('+'+fmtCurR(hBestV)):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${hBest?hBest.StockName:''}</div></div></div>
+        <div class="perf-kpi neg"><div class="kpi-label">Biggest Loser</div><div class="kpi-value">${hWorst?fmtCurR(hWorstV):'—'}<div style="font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;">${hWorst?hWorst.StockName:''}</div></div></div>
+        <div class="perf-kpi big ${hNet>=0?'pos':'neg'}"><div class="kpi-label">Unrealized P&amp;L</div><div class="kpi-value">${hNet>=0?'+':''}${fmtCurR(hNet)}</div></div>
     `;
 
     // ── CHARTS ────────────────────────────────────────────────────────────
@@ -2272,9 +2331,9 @@ function renderPerformance(){
     updateTopPnlBarChart('holdChart',   holding, 'holdBar');
 
     document.getElementById('closedChartLabels').innerHTML =
-        `<span class="green">Gain: +${fmtCur(cWinAmt)}</span><span>|</span><span class="red">Loss: -${fmtCur(cLossAmt)}</span>`;
+        `<span class="green">Gain: +${fmtCurR(cWinAmt)}</span><span>|</span><span class="red">Loss: -${fmtCurR(cLossAmt)}</span>`;
     document.getElementById('holdChartLabels').innerHTML =
-        `<span class="green">Gain: +${fmtCur(hWinAmt)}</span><span>|</span><span class="red">Loss: -${fmtCur(hLossAmt)}</span>`;
+        `<span class="green">Gain: +${fmtCurR(hWinAmt)}</span><span>|</span><span class="red">Loss: -${fmtCurR(hLossAmt)}</span>`;
 
     // ── EXPORT BUTTONS (in header) ────────────────────────────────────────
     document.getElementById('perfExportButtons').innerHTML = `
@@ -2307,20 +2366,30 @@ function updateTopPnlBarChart(canvasId, rows, chartRef) {
     const data   = merged.map(x => x.pnl);
     const colors = merged.map(x => x.pnl >= 0 ? '#10b981' : '#ef4444');
 
+    // Dynamic canvas-holder height so bars don't crush together
+    const holder = ctx.parentElement;
+    if(holder){
+        const perBar = 32;
+        const pad = 40;
+        holder.style.height = Math.max(240, merged.length * perBar + pad) + 'px';
+    }
+
     charts[chartRef] = new Chart(ctx, {
         type:'bar',
-        data:{ labels, datasets:[{data, backgroundColor:colors, borderWidth:0}] },
+        data:{ labels, datasets:[{data, backgroundColor:colors, borderWidth:0, borderRadius:4, barPercentage:0.82, categoryPercentage:0.82}] },
         options:{
             indexAxis:'y',
             responsive:true,
             maintainAspectRatio:false,
+            layout:{padding:{right:10}},
             plugins:{
                 legend:{display:false},
-                tooltip:{callbacks:{label:(c)=>fmtCur(c.raw)}}
+                tooltip:{callbacks:{label:(c)=>fmtCurR(c.raw)}},
+                datalabels:{display:false}
             },
             scales:{
-                x:{ticks:{color:'#64748b', callback:(v)=>fmtCur(v)}, grid:{color:'#e2e8f0'}},
-                y:{ticks:{color:'#334155', font:{weight:'bold'}}}
+                x:{ticks:{color:'#64748b', callback:(v)=>fmtCurR(v), font:{size:10}}, grid:{color:'#e2e8f0'}},
+                y:{ticks:{color:'#334155', font:{weight:'bold', size:11}, autoSkip:false}, grid:{display:false}}
             }
         }
     });
