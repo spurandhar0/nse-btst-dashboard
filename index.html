@@ -965,12 +965,29 @@ function populateDates(){
     els.dateBox.style.display='flex';
     els.tabs.classList.remove('hidden');
     Object.keys(pageState).forEach(k=>pageState[k].page=1);
+    // Populate Signal Date dropdown
+    if(els.dateSelect){
+        els.dateSelect.innerHTML = '<option value="">All Dates</option>' +
+            dates.map(d=>`<option value="${d}"${d===selectedDate?' selected':''}>${d}</option>`).join('');
+        els.dateSelect.value = selectedDate;
+    }
     // Show Last Signal Date in global bar
     const lastSigEl = document.getElementById('globalLastSignal');
     if(lastSigEl && dates.length){
         lastSigEl.textContent = '📅 Last Signal: ' + dates[0];
     }
     setLoading(false)
+}
+
+function onDateChange(val){
+    selectedDate = val || '';
+    Object.keys(pageState).forEach(k=>pageState[k].page=1);
+    const lastSigEl = document.getElementById('globalLastSignal');
+    if(lastSigEl){
+        lastSigEl.textContent = selectedDate ? ('📅 Signal: ' + selectedDate) : '📅 All Dates';
+    }
+    renderAll();
+    showToast(selectedDate ? `📅 Signal Date: ${selectedDate}` : '📅 All Dates', 'info');
 }
 
 function switchTab(name){
@@ -1309,41 +1326,106 @@ function renderTradeHistory(){
 
 function renderOverview(){
     document.getElementById('noDataBanner').style.display='none';
-    document.getElementById('overviewStats').style.display='grid';
+    document.getElementById('overviewStats').style.display='block';
     document.getElementById('cumChartBox').style.display='block';
     const rows=filteredRows();
     const holding=filteredHolding();
     const closed=filteredClosed();
     const calls=filteredCalls();
     const expired=filteredExpired();
+    const invalidCount=allRows.filter(r=>isInvalid(r)).length;
+    const pendingCalls=calls.filter(r=>String(r['Order']).trim().toLowerCase()==='pending').length;
     const activeInvested=holding.reduce((s,r)=>{const inv=parseNum(r['TotalInvestment']);if(inv>0)return s+inv;const entry=parseNum(r['AvgBuyPrice'])||parseNum(r['BuyClPrice']);return s+(entry*qtyOf(r))},0);
+    const activeMktVal=holding.reduce((s,r)=>{const ltp=parseNum(r['RecentLTP'])||parseNum(r['AvgBuyPrice'])||parseNum(r['BuyClPrice']);return s+(ltp*qtyOf(r))},0);
+    const closedInvested=closed.reduce((s,r)=>{const inv=parseNum(r['TotalInvestment']);if(inv>0)return s+inv;const entry=parseNum(r['AvgBuyPrice'])||parseNum(r['BuyClPrice']);return s+(entry*qtyOf(r))},0);
     const activePnl=holding.reduce((s,r)=>s+pnlRowExcel(r),0);
     const closedPnl=closed.reduce((s,r)=>s+pnlRowExcel(r),0);
     const totalPnl=rows.reduce((s,r)=>s+pnlRowExcel(r),0);
-    
-    const fmtPnlStat = (val) => {
-        const pos = val >= 0;
-        const prefix = pos ? '+' : '';
-        const color = pos ? '#059669' : '#dc2626';
-        const bg = pos ? 'linear-gradient(135deg,#ecfdf5,#d1fae5)' : 'linear-gradient(135deg,#fef2f2,#fee2e2)';
-        const border = pos ? '#10b981' : '#ef4444';
-        return { display: `${prefix}${fmtCur(val)}`, color, bg, border };
-    };
+    const closedWins=closed.filter(r=>pnlRowExcel(r)>0).length;
+    const closedLosses=closed.filter(r=>pnlRowExcel(r)<0).length;
+    const closedWinRate=closed.length?((closedWins/closed.length)*100):0;
+    const grossProfit=closed.filter(r=>pnlRowExcel(r)>0).reduce((s,r)=>s+pnlRowExcel(r),0);
+    const grossLoss=closed.filter(r=>pnlRowExcel(r)<0).reduce((s,r)=>s+pnlRowExcel(r),0);
+    const avgHoldDays=(()=>{
+        const ds=closed.map(r=>{const b=predDateKey(r);const s=normalizeDateKey(r['SoldDate']);if(!b||!s)return null;return Math.max(0,Math.round((new Date(s+'T00:00:00')-new Date(b+'T00:00:00'))/(1000*60*60*24)))}).filter(x=>x!==null);
+        return ds.length?(ds.reduce((a,b)=>a+b,0)/ds.length):0;
+    })();
+    const bestTrade=closed.slice().sort((a,b)=>pnlRowExcel(b)-pnlRowExcel(a))[0];
+    const worstTrade=closed.slice().sort((a,b)=>pnlRowExcel(a)-pnlRowExcel(b))[0];
+    const nameOf=(r)=>r?(r['Symbol']||r['Stock']||r['Name']||'—'):'—';
 
-    const activePnlFmt  = fmtPnlStat(activePnl);
-    const closedPnlFmt  = fmtPnlStat(closedPnl);
-    const totalPnlFmt   = fmtPnlStat(totalPnl);
+    const pnlCard=(label,val,big)=>{
+        const pos=val>=0;
+        const color=pos?'#059669':'#dc2626';
+        const bg=pos?'linear-gradient(135deg,#ecfdf5,#d1fae5)':'linear-gradient(135deg,#fef2f2,#fee2e2)';
+        const border=pos?'#10b981':'#ef4444';
+        const prefix=pos?'+':'';
+        const vSize=big?'26px':'20px';
+        const lSize=big?'13px':'11px';
+        const shadow=big?`box-shadow:0 6px 18px ${border}55;`:'';
+        return `<div class="stat" style="background:${bg};border-color:${border};${shadow}"><div class="label" style="font-size:${lSize};font-weight:900;">${label}</div><div class="value" style="color:${color};font-size:${vSize};">${prefix}${fmtCur(val)}</div></div>`;
+    };
+    const numCard=(label,val,color)=>`<div class="stat"><div class="label">${label}</div><div class="value"${color?` style="color:${color};"`:''}>${val}</div></div>`;
+
+    const heroColor=totalPnl>=0?'#059669':'#dc2626';
+    const heroBg=totalPnl>=0?'linear-gradient(135deg,#065f46,#059669)':'linear-gradient(135deg,#991b1b,#dc2626)';
+    const heroPrefix=totalPnl>=0?'+':'';
 
     els.overviewStats.innerHTML=`
-        <div class="stat"><div class="label">Filtered Rows</div><div class="value">${rows.length}</div></div>
-        <div class="stat"><div class="label">Calls</div><div class="value">${calls.length}</div></div>
-        <div class="stat"><div class="label">Expired</div><div class="value">${expired.length}</div></div>
-        <div class="stat"><div class="label">Holding</div><div class="value">${holding.length}</div></div>
-        <div class="stat"><div class="label">Closed</div><div class="value">${closed.length}</div></div>
-        <div class="stat"><div class="label">Active Invested</div><div class="value" style="color:#2563eb;">${fmtCur(activeInvested)}</div></div>
-        <div class="stat" style="background:${activePnlFmt.bg}; border-color:${activePnlFmt.border};"><div class="label">Active P&L</div><div class="value" style="color:${activePnlFmt.color};">${activePnlFmt.display}</div></div>
-        <div class="stat" style="background:${closedPnlFmt.bg}; border-color:${closedPnlFmt.border};"><div class="label">Closed P&L</div><div class="value" style="color:${closedPnlFmt.color};">${closedPnlFmt.display}</div></div>
-        <div class="stat" style="background:${totalPnlFmt.bg}; border-color:${totalPnlFmt.border}; box-shadow:0 4px 12px ${totalPnlFmt.border}33;"><div class="label" style="font-size:13px; font-weight:900;">Overall P&L</div><div class="value" style="color:${totalPnlFmt.color}; font-size:22px;">${totalPnlFmt.display}</div></div>
+        <div style="background:${heroBg};padding:22px 28px;border-radius:14px;margin-bottom:18px;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:18px;align-items:center;color:#fff;box-shadow:0 8px 24px ${heroColor}44;">
+            <div>
+                <div style="font-size:12px;font-weight:700;opacity:.85;letter-spacing:.5px;">📊 OVERALL NET P&L</div>
+                <div style="font-size:32px;font-weight:900;margin-top:4px;">${heroPrefix}${fmtCur(totalPnl)}</div>
+                <div style="font-size:11px;opacity:.9;margin-top:2px;">${rows.length} trades · ${closed.length} closed · ${holding.length} holding</div>
+            </div>
+            <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:16px;">
+                <div style="font-size:11px;font-weight:700;opacity:.85;">💼 ACTIVE P&L</div>
+                <div style="font-size:20px;font-weight:900;">${activePnl>=0?'+':''}${fmtCur(activePnl)}</div>
+                <div style="font-size:11px;opacity:.85;margin-top:2px;">Invested: ${fmtCur(activeInvested)}</div>
+            </div>
+            <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:16px;">
+                <div style="font-size:11px;font-weight:700;opacity:.85;">✅ CLOSED P&L</div>
+                <div style="font-size:20px;font-weight:900;">${closedPnl>=0?'+':''}${fmtCur(closedPnl)}</div>
+                <div style="font-size:11px;opacity:.85;margin-top:2px;">Win Rate: ${closedWinRate.toFixed(1)}% (${closedWins}W/${closedLosses}L)</div>
+            </div>
+            <div style="border-left:1px solid rgba(255,255,255,.25);padding-left:16px;">
+                <div style="font-size:11px;font-weight:700;opacity:.85;">📅 SIGNAL DATE</div>
+                <div style="font-size:16px;font-weight:900;">${selectedDate||'All Dates'}</div>
+                <div style="font-size:11px;opacity:.85;margin-top:2px;">${dateRangeActive?`${fromDateGlobal} → ${toDateGlobal}`:'Click dropdown above to filter'}</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:8px;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:.3px;">📋 SIGNAL SNAPSHOT</div>
+        <div class="stat-grid" style="margin-bottom:18px;">
+            ${numCard('Total Rows', rows.length)}
+            ${numCard('Calls', calls.length, '#2563eb')}
+            ${numCard('Pending', pendingCalls, '#f59e0b')}
+            ${numCard('Expired', expired.length, '#64748b')}
+            ${numCard('Holding', holding.length, '#0891b2')}
+            ${numCard('Closed', closed.length, '#059669')}
+            ${numCard('Invalid', invalidCount, '#dc2626')}
+        </div>
+
+        <div style="margin-bottom:8px;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:.3px;">💰 PORTFOLIO & P&L</div>
+        <div class="stat-grid" style="margin-bottom:18px;">
+            <div class="stat"><div class="label">Active Invested</div><div class="value" style="color:#2563eb;">${fmtCur(activeInvested)}</div></div>
+            <div class="stat"><div class="label">Market Value</div><div class="value" style="color:#0891b2;">${fmtCur(activeMktVal)}</div></div>
+            <div class="stat"><div class="label">Closed Invested</div><div class="value" style="color:#64748b;">${fmtCur(closedInvested)}</div></div>
+            ${pnlCard('Active P&L', activePnl)}
+            ${pnlCard('Closed P&L', closedPnl)}
+            ${pnlCard('Overall P&L', totalPnl, true)}
+        </div>
+
+        <div style="margin-bottom:8px;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:.3px;">🎯 CLOSED TRADE QUALITY</div>
+        <div class="stat-grid" style="margin-bottom:6px;">
+            <div class="stat"><div class="label">Win Rate</div><div class="value" style="color:${closedWinRate>=50?'#059669':'#dc2626'};">${closedWinRate.toFixed(1)}%</div></div>
+            <div class="stat"><div class="label">Wins / Losses</div><div class="value" style="font-size:18px;"><span style="color:#059669;">${closedWins}W</span> / <span style="color:#dc2626;">${closedLosses}L</span></div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Gross Profit</div><div class="value" style="color:#059669;">+${fmtCur(grossProfit)}</div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Gross Loss</div><div class="value" style="color:#dc2626;">${fmtCur(grossLoss)}</div></div>
+            <div class="stat"><div class="label">Avg Hold (days)</div><div class="value" style="color:#7c3aed;">${avgHoldDays.toFixed(1)}</div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#10b981;"><div class="label">Best Trade</div><div class="value" style="color:#059669;font-size:16px;">${bestTrade?'+'+fmtCur(pnlRowExcel(bestTrade)):'—'}</div><div style="font-size:10px;color:#64748b;font-weight:700;margin-top:2px;">${nameOf(bestTrade)}</div></div>
+            <div class="stat" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#ef4444;"><div class="label">Worst Trade</div><div class="value" style="color:#dc2626;font-size:16px;">${worstTrade?fmtCur(pnlRowExcel(worstTrade)):'—'}</div><div style="font-size:10px;color:#64748b;font-weight:700;margin-top:2px;">${nameOf(worstTrade)}</div></div>
+        </div>
     `;
     
     const mode=els.dlGroup.value;
