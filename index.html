@@ -763,8 +763,8 @@ function initializeDateRangeFilter(){
         const today=new Date().toISOString().split('T')[0];
         fromDateInput.value=today;
         toDateInput.value=today;
-        fromDateGlobal=today;
-        toDateGlobal=today;
+        // Do NOT set fromDateGlobal/toDateGlobal here —
+        // they must remain null until user explicitly clicks Apply
     }
 }
 
@@ -822,26 +822,21 @@ function filteredRows(){
     if(dateRangeActive&&fromDateGlobal&&toDateGlobal){
         return validRows.filter(r=>{const d=predDateKey(r);return d&&dateLE(fromDateGlobal,d)&&dateLE(d,toDateGlobal)});
     }
-    // Signal Date is active — range is disabled, only signal date applies
+    // Signal Date is active — exact match only (not <=)
     if(!selectedDate)return validRows;
-    return validRows.filter(r=>{const d=predDateKey(r);return d&&dateLE(d,selectedDate)});
+    return validRows.filter(r=>{const d=predDateKey(r);return d&&d===selectedDate});
 }
 
 // Filter Functions
 function filteredCalls() {
-    // Fresh Call = Invalid + Result "Invalid: No data on signal date"
-    //             AND BuyDate == TodayDate (signal is on the most recent data day — D+1 not yet available)
-    //             If BuyDate != TodayDate → stock's own data is not updated → NOT a fresh call
-    // Open Call  = Pending (buy not triggered yet, within pending window)
-    // All other Invalid scenarios NOT shown in Calls tab
+    // Fresh Call = Invalid + Result "Invalid: No data on signal date" (holiday/missing — still actionable)
+    // Open Call  = Pending (buy not triggered yet, within 30-day window)
+    // Expired and other Invalid scenarios NOT shown in Calls tab
     const callsFilter = document.getElementById('callsStatusFilter');
     const filterVal   = callsFilter ? callsFilter.value : 'all';
     return allRows.filter(r => {
         const o = String(r['Order'] || '').trim().toLowerCase();
-        const isNoData    = o === 'invalid' && String(r['Result'] || '').trim() === 'Invalid: No data on signal date';
-        const buyDate     = normalizeDateKey(r['BuyDate']);
-        const todayDate   = normalizeDateKey(r['TodayDate']);
-        const isFreshCall = isNoData && buyDate && todayDate && buyDate === todayDate;
+        const isFreshCall = o === 'invalid' && String(r['Result'] || '').trim() === 'Invalid: No data on signal date';
         const isOpenCall  = o === 'pending';
         if (!isFreshCall && !isOpenCall) return false;
         if (filterVal === 'fresh' && !isFreshCall) return false;
