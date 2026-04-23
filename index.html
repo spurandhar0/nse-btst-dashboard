@@ -8,25 +8,20 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <script>
-  // Force reload if cached version is detected
+  // Always serve latest version — never use cached page
   (function() {
-    var ts = new Date().getTime();
-    var key = 'page_version';
-    var stored = sessionStorage.getItem(key);
-    if (!stored) {
-      sessionStorage.setItem(key, ts);
-    } else {
-      // Clear all caches if browser supports it
-      if ('caches' in window) {
-        caches.keys().then(function(names) {
-          names.forEach(function(name) { caches.delete(name); });
-        });
-      }
+    var url = new URL(window.location.href);
+    var now = Math.floor(Date.now() / 300000); // refreshes every 5 minutes
+    var current = url.searchParams.get('v');
+    if (current !== String(now)) {
+      url.searchParams.set('v', now);
+      window.location.replace(url.toString());
     }
-    // Reload with cache-bust param if no query string present
-    if (window.location.search === '') {
-      var url = window.location.href + '?v=' + ts;
-      window.location.replace(url);
+    // Clear service worker caches
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        names.forEach(function(name) { caches.delete(name); });
+      });
     }
   })();
 </script>
