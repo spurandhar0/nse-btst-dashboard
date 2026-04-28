@@ -1267,12 +1267,14 @@ function renderTradeHistory(){
     const summaryEl=document.getElementById('tradeHistorySummary');
     if(!container)return;
     const filterVal=document.getElementById('thStatusFilter')?.value||'all';
+    const searchVal=(document.getElementById('thSearch')?.value||'').trim().toLowerCase();
     
     const rows=filteredRows().filter(r=>{
         const s=String(r['Status']||'').trim().toLowerCase();
         const o=String(r['Order']||'').trim().toLowerCase();
         if(s==='expired')return false;
         if(o==='invalid'||o==='pending')return false;
+        if(searchVal&&!String(r.StockName||'').toLowerCase().includes(searchVal))return false;
         return true;
     });
     
