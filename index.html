@@ -2225,7 +2225,7 @@ function renderDailyLedger(){
         const bd=boughtDateKey(r);
         if(bd){const k=keyOf(bd);map[k]=map[k]||{debit:0,credit:0};map[k].debit+=invest}
         const sd=soldDateKey(r);
-        if(sd&&dateLE(sd,selectedDate)){const k=keyOf(sd);map[k]=map[k]||{debit:0,credit:0};map[k].credit+=invest}
+        if(sd){const k=keyOf(sd);map[k]=map[k]||{debit:0,credit:0};const soldVal=parseNum(r['SoldPrice'])*qty;map[k].credit+=(soldVal>0?soldVal:invest)}
     }
     const keys=Object.keys(map).sort();
     if(!keys.length){els.dailyTable.innerHTML='<div class="empty">No ledger data</div>';return}
