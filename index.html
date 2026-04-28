@@ -2881,11 +2881,13 @@ function renderForceExit() {
     if (slice.length === 0) {
          tableHtml = '<tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:20px;">No stocks match selected filter.</td></tr>';
     } else {
-        slice.forEach(s => {
+        slice.forEach((s, idx) => {
             const r = s.row;
             const ticker = r['StockName'] || 'N/A';
             const bd = boughtDateKey(r);
             const pnlClass = s.pnl > 0 ? 'green' : s.pnl < 0 ? 'red' : '';
+            const pnlPct = s.avgBuy > 0 ? ((s.ltp - s.avgBuy) / s.avgBuy * 100).toFixed(2) + '%' : 'N/A';
+            const daysLeft = Math.max(0, 45 - s.marketDays);
             
             // Styling based on severity
             let rowStyle = '';
@@ -2902,15 +2904,15 @@ function renderForceExit() {
             }
             
             tableHtml += `<tr style="${rowStyle}">
+                <td style="font-weight:bold;">${idx + 1}</td>
                 <td style="font-weight:bold;">${ticker}</td>
                 <td>${bd}</td>
-                <td style="font-weight:bold;">${s.marketDays}</td>
-                <td style="opacity:0.7;">${s.calDays}</td>
-                <td>${s.qty}</td>
                 <td>₹${s.avgBuy.toFixed(2)}</td>
                 <td>₹${s.ltp.toFixed(2)}</td>
-                <td>₹${s.totalInv.toFixed(2)}</td>
+                <td style="font-weight:bold;">${s.marketDays}</td>
+                <td style="opacity:0.7;">${daysLeft}</td>
                 <td class="${pnlClass}" style="font-weight:bold;">${fmtCur(s.pnl)}</td>
+                <td class="${pnlClass}">${pnlPct}</td>
                 <td>${statusBadge}</td>
             </tr>`;
         });
