@@ -242,6 +242,21 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
   .hdr{padding:9px 12px;gap:8px;}.hdr-logo{height:34px;}.hdr-title .t1{font-size:14px;}
   .container{padding:10px 12px;}.tabs{gap:4px;padding:8px;}.tab{padding:6px 10px;font-size:12px;}
 }
+
+/* NFO/F&O badge */
+.fo-badge{display:inline-block;font-size:9px;font-weight:800;background:#7c3aed;color:#fff;padding:1px 5px;border-radius:10px;margin-left:4px;vertical-align:middle;letter-spacing:.4px;white-space:nowrap;}
+
+/* Index price bar */
+#indexBar{display:flex;align-items:center;gap:14px;padding:8px 24px;background:linear-gradient(135deg,#0a1628,#0d1f3c);border-bottom:2px solid rgba(255,255,255,.08);flex-wrap:wrap;}
+.idx-card{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:9px;padding:6px 14px;cursor:default;}
+.idx-name{font-size:11px;font-weight:800;color:rgba(255,255,255,.6);letter-spacing:.5px;text-transform:uppercase;}
+.idx-price{font-size:17px;font-weight:900;color:#fff;line-height:1;}
+.idx-chg{font-size:11px;font-weight:700;white-space:nowrap;padding:2px 7px;border-radius:12px;}
+.idx-chg.pos{background:rgba(5,150,105,.25);color:#10b981;}
+.idx-chg.neg{background:rgba(220,38,38,.25);color:#ef4444;}
+.idx-chg.flat{background:rgba(100,116,139,.2);color:#94a3b8;}
+.idx-date{font-size:10px;color:rgba(255,255,255,.35);font-weight:500;}
+.idx-loading{font-size:11px;color:rgba(255,255,255,.4);font-style:italic;}
 </style>
 </head>
 <body>
@@ -265,6 +280,13 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
     </div>
   </div>
 </header>
+
+<div id="indexBar">
+  <span style="font-size:11px;font-weight:800;color:rgba(255,255,255,.45);letter-spacing:.8px;text-transform:uppercase;margin-right:4px;">📈 INDICES</span>
+  <div id="idxNifty50" class="idx-card"><span class="idx-loading">Loading NIFTY 50…</span></div>
+  <div id="idxBankNifty" class="idx-card"><span class="idx-loading">Loading BANKNIFTY…</span></div>
+  <span id="idxUpdated" style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;"></span>
+</div>
 
 <div id="autoLoadBanner" style="display:flex;align-items:center;justify-content:center;gap:12px;padding:7px 20px;background:rgba(37,99,235,.08);border-bottom:2px solid #2563eb;font-size:12.5px;font-weight:600;">
   <span id="autoLoadText" style="color:#2563eb;">⏳ Loading latest BTST data from server...</span>
@@ -1397,7 +1419,7 @@ function renderTradeHistory(){
             holdNet+=pnl;
         }
         
-        html+=`<div class="trade-stock"><h3>${index+1}. ${r.StockName} <span style="font-size:12px; color:#94a3b8">(${normalizeDateKey(r.B0_BoughtDate)})</span></h3><div class="buy-title">BUY HISTORY</div><table class="trade-table"><tr><th>Buy #</th><th>Date</th><th>Buy Price</th><th style="color:#f59e0b">Avg Buy</th><th>Qty (₹10k)</th><th>Investment</th><th>Prev Close</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr>`;
+        html+=`<div class="trade-stock"><h3>${index+1}. ${r.StockName}${foBadge(r.StockName)} <span style="font-size:12px; color:#94a3b8">(${normalizeDateKey(r.B0_BoughtDate)})</span></h3><div class="buy-title">BUY HISTORY</div><table class="trade-table"><tr><th>Buy #</th><th>Date</th><th>Buy Price</th><th style="color:#f59e0b">Avg Buy</th><th>Qty (₹10k)</th><th>Investment</th><th>Prev Close</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr>`;
         
         const bCount=Number(r.BuyCount||1);
         const buyPrices=[];
@@ -1664,7 +1686,7 @@ function renderCalls(){
         const isOpenCall = orderStatus==='pending';
         const statusBtnClass = isFresh ? 'fresh-call' : 'open-call';
         const statusText     = isFresh ? 'Fresh Call'  : 'Open Call';
-        html+=`<tr><td>${toDateStr(r['BuyDate'])}</td><td>${r['StockName']||''}</td><td class="${colorCls(r['1DChange%'])}">${fmtPct(r['1DChange%'])}</td><td class="${colorCls(r['5DLow%'])}">${fmtPct(r['5DLow%'])}</td><td>${fmtCur(buyPrice)}</td><td>${fmtCur(ltp)}</td><td class="green">${fmtCur(parseNum(r['TargetPrice'])||buyPrice*1.10)}</td><td class="red">${fmtCur(parseNum(r['StoplossPrice'])||buyPrice*0.80)}</td><td><button class="status-btn ${statusBtnClass}">${statusText}</button></td></tr>`
+        html+=`<tr><td>${toDateStr(r['BuyDate'])}</td><td>${r['StockName']||''}${foBadge(r['StockName'])}</td><td class="${colorCls(r['1DChange%'])}">${fmtPct(r['1DChange%'])}</td><td class="${colorCls(r['5DLow%'])}">${fmtPct(r['5DLow%'])}</td><td>${fmtCur(buyPrice)}</td><td>${fmtCur(ltp)}</td><td class="green">${fmtCur(parseNum(r['TargetPrice'])||buyPrice*1.10)}</td><td class="red">${fmtCur(parseNum(r['StoplossPrice'])||buyPrice*0.80)}</td><td><button class="status-btn ${statusBtnClass}">${statusText}</button></td></tr>`
     }
     html+='</tbody></table>';
     els.callsTable.innerHTML=html
@@ -1699,7 +1721,7 @@ function renderLedger(){
         const pnl=pnlRowExcel(r);
         const pct=pnlPctRowExcel(r);
         cum+=pnl;
-        html+=`<tr><td>${toDateStr(r['B0_BoughtDate'])}</td><td>${r['StockName']||''}</td><td>${r['Order']||''}</td><td>${statusUI(r)}</td><td>${fmtCur(entry)}</td><td>${qty}</td><td>${fmtCur(investment)}</td><td>${fmtCur(ltp)}</td><td class="${colorCls(pnl)}">${fmtCur(pnl)}</td><td class="${colorCls(pct)}">${fmtPct(pct)}</td><td class="${colorCls(cum)}">${fmtCur(cum)}</td></tr>`
+        html+=`<tr><td>${toDateStr(r['B0_BoughtDate'])}</td><td>${r['StockName']||''}${foBadge(r['StockName'])}</td><td>${r['Order']||''}</td><td>${statusUI(r)}</td><td>${fmtCur(entry)}</td><td>${qty}</td><td>${fmtCur(investment)}</td><td>${fmtCur(ltp)}</td><td class="${colorCls(pnl)}">${fmtCur(pnl)}</td><td class="${colorCls(pct)}">${fmtPct(pct)}</td><td class="${colorCls(cum)}">${fmtCur(cum)}</td></tr>`
     }
     html+='</tbody></table>';
     els.ledgerTable.innerHTML=html
@@ -1720,7 +1742,7 @@ function renderHolding(){
         const val=ltp*qty;
         const pnl=pnlRowExcel(r);
         const pct=pnlPctRowExcel(r);
-        html+=`<tr><td>${r['StockName']||''}</td><td>${toDateStr(r['B0_BoughtDate'])}</td><td>${fmtCur(entry)}</td><td>${qty}</td><td>${fmtCur(ltp)}</td><td>${fmtCur(inv)}</td><td>${fmtCur(val)}</td><td class="${colorCls(pnl)}">${fmtCur(pnl)}</td><td class="${colorCls(pct)}">${fmtPct(pct)}</td></tr>`
+        html+=`<tr><td>${r['StockName']||''}${foBadge(r['StockName'])}</td><td>${toDateStr(r['B0_BoughtDate'])}</td><td>${fmtCur(entry)}</td><td>${qty}</td><td>${fmtCur(ltp)}</td><td>${fmtCur(inv)}</td><td>${fmtCur(val)}</td><td class="${colorCls(pnl)}">${fmtCur(pnl)}</td><td class="${colorCls(pct)}">${fmtPct(pct)}</td></tr>`
     }
     html+='</tbody></table>';
     els.holdingTable.innerHTML=html
@@ -1770,7 +1792,7 @@ function renderClosed(){
         if(resultText.toLowerCase() === 'win' || resultText.toLowerCase() === 'profit') resultStyle = 'color:#10b981;font-weight:bold;';
         else if(resultText.toLowerCase() === 'loss') resultStyle = 'color:#ef4444;font-weight:bold;';
         
-        html+=`<tr><td>${r['StockName']||''}</td><td>${toDateStr(r['B0_BoughtDate'])}</td><td>${toDateStr(r['SoldDate'])}</td><td>${fmtCur(entry)}</td><td>${qty}</td><td>${fmtCur(exit)}</td><td>${fmtCur(investment)}</td><td class="${colorCls(profits)}">${fmtCur(profits)}</td><td class="${colorCls(gainLossPct)}">${fmtPct(gainLossPct)}</td><td style="${resultStyle}">${resultText}</td></tr>`
+        html+=`<tr><td>${r['StockName']||''}${foBadge(r['StockName'])}</td><td>${toDateStr(r['B0_BoughtDate'])}</td><td>${toDateStr(r['SoldDate'])}</td><td>${fmtCur(entry)}</td><td>${qty}</td><td>${fmtCur(exit)}</td><td>${fmtCur(investment)}</td><td class="${colorCls(profits)}">${fmtCur(profits)}</td><td class="${colorCls(gainLossPct)}">${fmtPct(gainLossPct)}</td><td style="${resultStyle}">${resultText}</td></tr>`
     }
     html+='</tbody></table>';
     els.closedTable.innerHTML=html
@@ -1798,7 +1820,7 @@ function renderAvgBuyTrigger(){
         const triggerPrice=avgBuy*0.90;
         const nextBuyPrice=avgBuy*0.85;
         const distPct=((ltp-triggerPrice)/triggerPrice)*100;
-        html+=`<tr><td>${r.StockName}</td><td>${fmtCur(initialBuy)}</td><td>${fmtCur(avgBuy)}</td><td class="${colorCls(ltp-avgBuy)}">${fmtCur(ltp)}</td><td>${fmtCur(triggerPrice)}</td><td style="color:#f59e0b;font-weight:bold">${fmtCur(nextBuyPrice)}</td><td class="${distPct<=0?'red':'green'}">${distPct.toFixed(2)}%</td><td><span class="badge" style="background:#10b981; color:#000">BUY SIGNAL</span></td></tr>`;
+        html+=`<tr><td>${r.StockName}${foBadge(r.StockName)}</td><td>${fmtCur(initialBuy)}</td><td>${fmtCur(avgBuy)}</td><td class="${colorCls(ltp-avgBuy)}">${fmtCur(ltp)}</td><td>${fmtCur(triggerPrice)}</td><td style="color:#f59e0b;font-weight:bold">${fmtCur(nextBuyPrice)}</td><td class="${distPct<=0?'red':'green'}">${distPct.toFixed(2)}%</td><td><span class="badge" style="background:#10b981; color:#000">BUY SIGNAL</span></td></tr>`;
     });
     html+='</tbody></table>';
     tableEl.innerHTML=html;
@@ -1823,7 +1845,7 @@ function renderSellTrigger(){
         const triggerPrice=parseNum(r['StoplossPrice'])||avgBuy*0.80;
         const targetPrice=parseNum(r['TargetPrice'])||avgBuy*1.10;
         const distPct=((ltp-triggerPrice)/triggerPrice)*100;
-        html+=`<tr><td>${r.StockName}</td><td>${fmtCur(avgBuy)}</td><td class="${colorCls(pnl)}">${fmtCur(ltp)}</td><td class="${colorCls(pnl)}">${fmtCur(pnl)}</td><td class="${colorCls(pnl)}">${pnlPct.toFixed(2)}%</td><td>${fmtCur(triggerPrice)}</td><td style="color:#10b981;font-weight:bold">${fmtCur(targetPrice)}</td><td class="green">${distPct.toFixed(2)}%</td><td><span class="badge" style="background:#ef4444; color:#fff">SELL SIGNAL</span></td></tr>`;
+        html+=`<tr><td>${r.StockName}${foBadge(r.StockName)}</td><td>${fmtCur(avgBuy)}</td><td class="${colorCls(pnl)}">${fmtCur(ltp)}</td><td class="${colorCls(pnl)}">${fmtCur(pnl)}</td><td class="${colorCls(pnl)}">${pnlPct.toFixed(2)}%</td><td>${fmtCur(triggerPrice)}</td><td style="color:#10b981;font-weight:bold">${fmtCur(targetPrice)}</td><td class="green">${distPct.toFixed(2)}%</td><td><span class="badge" style="background:#ef4444; color:#fff">SELL SIGNAL</span></td></tr>`;
     });
     html+='</tbody></table>';
     tableEl.innerHTML=html;
@@ -2994,7 +3016,7 @@ function renderForceExit() {
             
             tableHtml += `<tr style="${rowStyle}">
                 <td style="font-weight:bold;">${idx + 1}</td>
-                <td style="font-weight:bold;">${ticker}</td>
+                <td style="font-weight:bold;">${ticker}${foBadge(ticker)}</td>
                 <td>${bd}</td>
                 <td>₹${s.avgBuy.toFixed(2)}</td>
                 <td>₹${s.ltp.toFixed(2)}</td>
@@ -4200,7 +4222,7 @@ function renderMarketData() {
 
             return `<tr>
                 <td style="color:#94a3b8;font-weight:600;font-size:13px;">${start + i + 1}</td>
-                <td style="font-weight:900;color:#2563eb;font-size:14px;">${r.symbol}</td>
+                <td style="font-weight:900;color:#2563eb;font-size:14px;">${r.symbol}${foBadge(r.symbol)}</td>
                 <td style="color:#64748b;font-size:13px;white-space:nowrap;">${mdFmtDate(r.date)}</td>
                 <td style="font-size:14px;">${r.prev_close > 0 ? r.prev_close.toFixed(2) : '—'}</td>
                 <td style="font-size:14px;">${r.open > 0 ? r.open.toFixed(2) : '—'}</td>
@@ -4797,6 +4819,57 @@ function exportInvestCalcCSV() {
     a.click();
     showToast('\u2705 CSV exported!', 'success');
 }
+
+// ─── NFO / F&O Symbol Set ────────────────────────────────────────────────────
+const NFO_SYMBOLS = new Set(['AARTIIND', 'ABB', 'ABBOTINDIA', 'ABCAPITAL', 'ABFRL', 'ACC', 'ADANIENT', 'ADANIPORTS', 'ALKEM', 'AMBUJACEM', 'ANGELONE', 'APLAPOLLO', 'APOLLOHOSP', 'APOLLOTYRE', 'ASHOKLEY', 'ASIANPAINT', 'ASTRAL', 'ATGL', 'ATUL', 'AUBANK', 'AUROPHARMA', 'AXISBANK', 'BAJAJ-AUTO', 'BAJAJFINSV', 'BAJFINANCE', 'BALKRISIND', 'BALRAMCHIN', 'BANDHANBNK', 'BANKBARODA', 'BEL', 'BERGEPAINT', 'BHARTIARTL', 'BHEL', 'BIOCON', 'BOSCHLTD', 'BPCL', 'BRITANNIA', 'BSOFT', 'CANBK', 'CANFINHOME', 'CHAMBLFERT', 'CHOLAFIN', 'CIPLA', 'COALINDIA', 'COFORGE', 'COLPAL', 'CONCOR', 'COROMANDEL', 'CROMPTON', 'CUB', 'CUMMINSIND', 'DABUR', 'DALBHARAT', 'DEEPAKNTR', 'DELTACORP', 'DIVISLAB', 'DIXON', 'DLF', 'DRREDDY', 'EICHERMOT', 'ESCORTS', 'EXIDEIND', 'FEDERALBNK', 'GAIL', 'GLENMARK', 'GMRINFRA', 'GNFC', 'GODREJCP', 'GODREJPROP', 'GRANULES', 'GRASIM', 'GUJGASLTD', 'HAL', 'HAVELLS', 'HCLTECH', 'HDFCAMC', 'HDFCBANK', 'HDFCLIFE', 'HEROMOTOCO', 'HINDALCO', 'HINDCOPPER', 'HINDPETRO', 'HINDUNILVR', 'HONAUT', 'IDFCFIRSTB', 'IEX', 'IGL', 'INDHOTEL', 'INDIAMART', 'INDIGO', 'INDUSINDBK', 'INDUSTOWER', 'INFY', 'IOC', 'IPCALAB', 'IRCTC', 'ITC', 'JINDALSTEL', 'JKCEMENT', 'JSL', 'JSWENERGY', 'JSWSTEEL', 'JUBLFOOD', 'KAJARIACER', 'KOTAKBANK', 'KPITTECH', 'LALPATHLAB', 'LAURUSLABS', 'LICHSGFIN', 'LT', 'LTF', 'LTIM', 'LTTS', 'LUPIN', 'M&M', 'MANAPPURAM', 'MARICO', 'MARUTI', 'MCDOWELL-N', 'MCX', 'METROPOLIS', 'MFSL', 'MGL', 'MOTHERSON', 'MPHASIS', 'MRF', 'MUTHOOTFIN', 'NATIONALUM', 'NAUKRI', 'NAVINFLUOR', 'NESTLEIND', 'NMDC', 'NTPC', 'OBEROIRLTY', 'OFSS', 'ONGC', 'PAGEIND', 'PEL', 'PERSISTENT', 'PETRONET', 'PFC', 'PIDILITIND', 'PIIND', 'PNB', 'POLYCAB', 'POWERGRID', 'PVRINOX', 'RBLBANK', 'RECLTD', 'RELIANCE', 'SAIL', 'SBICARD', 'SBILIFE', 'SBIN', 'SHREECEM', 'SHRIRAMFIN', 'SIEMENS', 'SRF', 'SUNPHARMA', 'SUNTV', 'SYNGENE', 'TATACHEM', 'TATACOMM', 'TATACONSUM', 'TATAMOTORS', 'TATAPOWER', 'TATASTEEL', 'TCS', 'TECHM', 'TIINDIA', 'TITAN', 'TORNTPHARM', 'TORNTPOWER', 'TRENT', 'TVSMOTOR', 'UBL', 'ULTRACEMCO', 'UNIONBANK', 'UPL', 'VEDL', 'VOLTAS', 'WIPRO', 'ZOMATO', 'ZYDUSLIFE']);
+
+function foBadge(sym) {
+    if (!sym) return '';
+    const s = String(sym).toUpperCase().trim();
+    return NFO_SYMBOLS.has(s)
+        ? '<span class="fo-badge">F&O</span>'
+        : '';
+}
+
+// ─── Index Bar (Nifty50 + BankNifty) ────────────────────────────────────────
+(function loadIndexBar() {
+    const RAW = 'https://raw.githubusercontent.com/spurandhar0/nse-btst-dashboard/main/nifty_index.json?v=' + Date.now();
+    fetch(RAW)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+            if (!data || !data.indices) return;
+            const fmt = v => v.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const ids = {
+                'NIFTY 50': 'idxNifty50',
+                'BANKNIFTY': 'idxBankNifty'
+            };
+            data.indices.forEach(idx => {
+                const el = document.getElementById(ids[idx.label]);
+                if (!el) return;
+                const isPos = idx.change > 0;
+                const isNeg = idx.change < 0;
+                const chgClass = isPos ? 'pos' : isNeg ? 'neg' : 'flat';
+                const sign = isPos ? '+' : '';
+                el.innerHTML = `
+                    <div>
+                        <div class="idx-name">${idx.label}</div>
+                        <div class="idx-date">${idx.date}</div>
+                    </div>
+                    <div>
+                        <div class="idx-price">${fmt(idx.close)}</div>
+                        <div class="idx-chg ${chgClass}">${sign}${fmt(idx.change)} (${sign}${idx.change_pct.toFixed(2)}%)</div>
+                    </div>`;
+            });
+            const updEl = document.getElementById('idxUpdated');
+            if (updEl && data.updated_at) updEl.textContent = '🕐 ' + data.updated_at;
+        })
+        .catch(() => {
+            ['idxNifty50','idxBankNifty'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = '<span class="idx-loading">Data unavailable</span>';
+            });
+        });
+})();
 
 document.addEventListener('DOMContentLoaded', () => { icUpdateSlots(); });
 </script>
