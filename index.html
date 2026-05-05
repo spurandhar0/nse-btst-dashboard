@@ -494,40 +494,75 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
 
 <!-- INVESTMENT CALCULATOR TAB -->
 <div id="investCalc" class="card hidden">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
-    <div>
-      <h3 style="margin:0;color:var(--navy);font-size:18px;font-weight:800;">💰 Sequential Investment Calculator</h3>
-      <div style="font-size:12px;color:var(--text3);margin-top:3px;">One stock at a time · Sell → Reinvest full capital → Next available closed pick</div>
+
+  <!-- Header -->
+  <div style="margin-bottom:16px;">
+    <h3 style="margin:0 0 4px;color:var(--navy);font-size:18px;font-weight:800;">💰 Sequential Investment Calculator</h3>
+    <div style="font-size:12px;color:var(--text3);">Split capital across 1–5 stocks simultaneously · Each slot runs independently · Sell → Reinvest into next available pick</div>
+  </div>
+
+  <!-- Controls Row -->
+  <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;">
+    <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;">
+
+      <!-- Capital -->
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Starting Capital (₹)</div>
+        <input type="number" id="icCapital" value="10000" min="1000" step="1000"
+          style="width:130px;padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);font-weight:700;font-size:13px;">
+      </div>
+
+      <!-- Number of Stocks -->
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">Stocks in Parallel</div>
+        <select id="icSlots" onchange="icUpdateSlots()" style="padding:7px 11px;border-radius:8px;border:1.5px solid var(--border);font-weight:700;font-size:13px;min-width:120px;">
+          <option value="1">1 Stock (100%)</option>
+          <option value="2" selected>2 Stocks</option>
+          <option value="3">3 Stocks</option>
+          <option value="4">4 Stocks</option>
+          <option value="5">5 Stocks</option>
+        </select>
+      </div>
+
+      <!-- Allocation sliders — rendered dynamically -->
+      <div id="icAllocWrap" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;"></div>
+
+      <!-- Buttons -->
+      <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;">
+        <button onclick="runInvestCalc()" style="padding:8px 18px;font-size:12px;font-weight:700;">▶ Run Simulation</button>
+        <button onclick="exportInvestCalcCSV()" style="padding:8px 16px;font-size:12px;background:#059669;">⬇ CSV</button>
+      </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-      <label style="font-size:12px;font-weight:700;color:var(--text2);">Starting Capital (₹):</label>
-      <input type="number" id="icCapital" value="10000" min="1000" step="1000" style="width:120px;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);font-weight:700;font-size:13px;" oninput="runInvestCalc()">
-      <button onclick="runInvestCalc()" style="padding:7px 16px;font-size:12px;">▶ Run Simulation</button>
-      <button onclick="exportInvestCalcCSV()" style="padding:7px 16px;font-size:12px;background:#059669;">⬇ Export CSV</button>
-    </div>
+
+    <!-- Allocation visual bar -->
+    <div id="icAllocBar" style="margin-top:12px;display:flex;border-radius:6px;overflow:hidden;height:20px;"></div>
+    <div id="icAllocInfo" style="margin-top:6px;font-size:11px;color:var(--text3);font-weight:600;"></div>
   </div>
 
   <!-- Summary Cards -->
-  <div id="icSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:18px;"></div>
+  <div id="icSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:16px;"></div>
+
+  <!-- Per-Slot Summary -->
+  <div id="icSlotSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;"></div>
 
   <!-- Capital Growth Chart -->
-  <div class="chart-box" style="margin-bottom:18px;">
-    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">📈 Capital Growth Over Trades</div>
+  <div class="chart-box" style="margin-bottom:16px;">
+    <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">📈 Capital Growth Over Trade Rounds</div>
     <div style="height:280px;position:relative;"><canvas id="icChart"></canvas></div>
   </div>
 
   <!-- Trade Table -->
   <div id="icNoData" style="text-align:center;padding:40px;color:var(--text3);font-size:14px;display:block;">
-    ⚙️ Load your Excel data first, then click <b>Run Simulation</b>
+    ⚙️ Configure your settings above and click <b>▶ Run Simulation</b>
   </div>
   <div class="table-area" id="icTableWrap" style="display:none;">
     <table id="icTable">
       <thead>
         <tr>
-          <th>#</th><th>Stock</th><th>Buy Date</th><th>Sold Date</th>
-          <th>Buy Price (₹)</th><th>Sell Price (₹)</th><th>Shares</th>
+          <th>Round</th><th>Slot</th><th>Stock</th><th>Buy Date</th><th>Sold Date</th>
+          <th>Alloc %</th><th>Capital Used</th><th>Buy Price</th><th>Sell Price</th><th>Shares</th>
           <th>Invested (₹)</th><th>Proceeds (₹)</th>
-          <th>Profit/Loss (₹)</th><th>Return %</th><th>Capital After (₹)</th><th>Duration (Days)</th>
+          <th>Profit/Loss (₹)</th><th>Return %</th><th>Slot Capital After (₹)</th>
         </tr>
       </thead>
       <tbody id="icTableBody"></tbody>
@@ -4346,13 +4381,106 @@ async function exportHoldPerformanceImage(trades, wins, losses, winAmt, lossAmt,
 let icTradesData = [];
 let icChartObj = null;
 
+/* Slot colours for up to 5 parallel stocks */
+const IC_COLORS = [
+    {bg:'#2563eb', light:'#dbeafe', border:'#93c5fd', label:'Slot 1'},
+    {bg:'#059669', light:'#d1fae5', border:'#6ee7b7', label:'Slot 2'},
+    {bg:'#d97706', light:'#fef3c7', border:'#fcd34d', label:'Slot 3'},
+    {bg:'#7c3aed', light:'#ede9fe', border:'#c4b5fd', label:'Slot 4'},
+    {bg:'#db2777', light:'#fce7f3', border:'#f9a8d4', label:'Slot 5'},
+];
+
+/* ── Build allocation input controls ── */
+function icUpdateSlots() {
+    const n = parseInt(document.getElementById('icSlots').value) || 1;
+    const wrap = document.getElementById('icAllocWrap');
+    wrap.innerHTML = '';
+
+    if (n === 1) {
+        icUpdateAllocBar();
+        return;
+    }
+
+    const equal = Math.floor(100 / n);
+    for (let i = 0; i < n; i++) {
+        const pct = (i < n - 1) ? equal : 100 - equal * (n - 1);
+        const col = IC_COLORS[i];
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <div style="font-size:10px;font-weight:700;color:${col.bg};text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;">
+                ${col.label}
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;">
+                <input type="range" id="icAlloc${i}" min="5" max="90" value="${pct}" step="5"
+                    style="width:90px;accent-color:${col.bg};"
+                    oninput="icClampAllocs(${i},${n}); icUpdateAllocBar();">
+                <span id="icAllocVal${i}" style="font-size:13px;font-weight:800;color:${col.bg};min-width:36px;">${pct}%</span>
+            </div>`;
+        wrap.appendChild(div);
+    }
+    icUpdateAllocBar();
+}
+
+/* Keep allocations summing to 100 — adjust last slider */
+function icClampAllocs(changed, n) {
+    if (n === 1) return;
+    const vals = [];
+    for (let i = 0; i < n; i++) vals.push(parseInt(document.getElementById('icAlloc' + i).value) || 0);
+    // Fix all except last, last = remainder
+    let sum = 0;
+    for (let i = 0; i < n - 1; i++) {
+        vals[i] = Math.min(vals[i], 100 - (n - 1 - i) * 5);
+        vals[i] = Math.max(vals[i], 5);
+        sum += vals[i];
+    }
+    vals[n - 1] = Math.max(5, 100 - sum);
+    for (let i = 0; i < n; i++) {
+        const el = document.getElementById('icAlloc' + i);
+        if (el) el.value = vals[i];
+        const vl = document.getElementById('icAllocVal' + i);
+        if (vl) vl.textContent = vals[i] + '%';
+    }
+}
+
+function icGetAllocs(n) {
+    if (n === 1) return [100];
+    const vals = [];
+    let sum = 0;
+    for (let i = 0; i < n - 1; i++) {
+        const v = parseInt(document.getElementById('icAlloc' + i).value) || 0;
+        vals.push(v);
+        sum += v;
+    }
+    vals.push(Math.max(0, 100 - sum));
+    return vals;
+}
+
+function icUpdateAllocBar() {
+    const n = parseInt(document.getElementById('icSlots').value) || 1;
+    const allocs = icGetAllocs(n);
+    const bar = document.getElementById('icAllocBar');
+    const info = document.getElementById('icAllocInfo');
+
+    bar.innerHTML = allocs.map((pct, i) =>
+        `<div style="width:${pct}%;background:${IC_COLORS[i].bg};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;transition:width .3s;">${pct}%</div>`
+    ).join('');
+
+    const sum = allocs.reduce((a, b) => a + b, 0);
+    info.textContent = allocs.map((p, i) => IC_COLORS[i].label + ': ' + p + '%').join('  ·  ') + '  —  Total: ' + sum + '%';
+    info.style.color = sum === 100 ? 'var(--green)' : '#dc2626';
+}
+
+/* ── Main simulation ── */
 function runInvestCalc() {
     const startingCapital = parseFloat(document.getElementById('icCapital').value) || 10000;
-    const noDataEl = document.getElementById('icNoData');
+    const n = parseInt(document.getElementById('icSlots').value) || 1;
+    const allocs = icGetAllocs(n);
+    const totalAlloc = allocs.reduce((a, b) => a + b, 0);
+
+    const noDataEl  = document.getElementById('icNoData');
     const tableWrap = document.getElementById('icTableWrap');
     const summaryEl = document.getElementById('icSummary');
 
-    // Need allRows loaded
     if (!allRows || !allRows.length) {
         noDataEl.innerHTML = '⚠️ No data loaded. Please wait for data to load first.';
         noDataEl.style.display = 'block';
@@ -4361,243 +4489,281 @@ function runInvestCalc() {
         return;
     }
 
-    // Filter: BuyCount === 1, Status === Closed, has SoldPrice > 0
+    if (totalAlloc !== 100) {
+        showToast('Allocations must sum to 100% (currently ' + totalAlloc + '%)', 'error');
+        return;
+    }
+
+    // Get all closed single-buy trades, sorted by BuyDate
     const closed = allRows.filter(r => {
         const buyCount = parseInt(String(r['BuyCount'] || '0').replace(/,/g, '')) || 0;
-        const st = statusNorm(r);
         const soldP = parseNum(r['SoldPrice']);
-        return buyCount === 1 && (st === 'closed' || isClosed(r)) && soldP > 0;
+        return buyCount === 1 && isClosed(r) && soldP > 0;
     });
 
     if (!closed.length) {
-        noDataEl.innerHTML = '⚠️ No closed single-buy trades found in data. Load your full QuickRun Excel file first.';
+        noDataEl.innerHTML = '⚠️ No closed single-buy trades found. Load your full QuickRun Excel file first.';
         noDataEl.style.display = 'block';
         tableWrap.style.display = 'none';
         summaryEl.innerHTML = '';
         return;
     }
 
-    // Sort by BuyDate ascending
     closed.sort((a, b) => {
-        const da = predDateKey(a) || '';
-        const db = predDateKey(b) || '';
+        const da = predDateKey(a) || '', db = predDateKey(b) || '';
         return da > db ? 1 : da < db ? -1 : 0;
     });
 
-    // Sequential simulation
-    let capital = startingCapital;
-    let lastSoldDate = '0000-00-00';
-    const used = new Set();
-    const trades = [];
+    // Each slot gets its own capital pool and lastSoldDate
+    const slotCapital    = allocs.map(pct => startingCapital * pct / 100);
+    const slotLastSold   = Array(n).fill('0000-00-00');
+    const slotUsed       = Array.from({length: n}, () => new Set());
+    const allTrades      = []; // all trade records
+    const roundCapitals  = [{round: 0, total: startingCapital, slots: [...slotCapital]}];
 
-    for (let guard = 0; guard < 2000; guard++) {
-        // Find the first unused trade with BuyDate > lastSoldDate
-        let picked = null;
-        let pickedIdx = -1;
-        for (let i = 0; i < closed.length; i++) {
-            if (used.has(i)) continue;
-            const bd = predDateKey(closed[i]) || '';
-            if (bd > lastSoldDate) {
-                picked = closed[i];
-                pickedIdx = i;
-                break;
+    let roundNum = 0;
+    for (let guard = 0; guard < 5000; guard++) {
+        let anyTrade = false;
+
+        for (let s = 0; s < n; s++) {
+            // Find first unused closed trade with BuyDate > slotLastSold[s]
+            let picked = null, pickedIdx = -1;
+            for (let i = 0; i < closed.length; i++) {
+                if (slotUsed[s].has(i)) continue;
+                const bd = predDateKey(closed[i]) || '';
+                if (bd > slotLastSold[s]) { picked = closed[i]; pickedIdx = i; break; }
             }
+            if (!picked) continue;
+
+            const buyPrice  = parseNum(picked['AvgBuyPrice']) || parseNum(picked['BuyClPrice']);
+            const sellPrice = parseNum(picked['SoldPrice']);
+            if (!buyPrice || buyPrice <= 0 || slotCapital[s] < buyPrice) {
+                slotUsed[s].add(pickedIdx);
+                continue;
+            }
+
+            const shares   = Math.floor(slotCapital[s] / buyPrice);
+            if (shares === 0) { slotUsed[s].add(pickedIdx); continue; }
+
+            const invested  = shares * buyPrice;
+            const leftover  = slotCapital[s] - invested;
+            const proceeds  = shares * sellPrice;
+            const profit    = proceeds - invested;
+            const gainPct   = invested > 0 ? (profit / invested * 100) : 0;
+            const newCap    = leftover + proceeds;
+
+            const bd = predDateKey(picked) || '';
+            const sd = normalizeDateKey(picked['SoldDate']) || '';
+            const durDays = (bd && sd) ? Math.max(0, Math.round(
+                (new Date(sd+'T00:00:00') - new Date(bd+'T00:00:00')) / 86400000)) : 0;
+
+            roundNum++;
+            allTrades.push({
+                round: roundNum,
+                slot: s + 1,
+                slotLabel: IC_COLORS[s].label,
+                allocPct: allocs[s],
+                stock: picked['StockName'] || '',
+                buyDate: bd, soldDate: sd,
+                buyPrice: +buyPrice.toFixed(2),
+                sellPrice: +sellPrice.toFixed(2),
+                shares, invested: +invested.toFixed(2),
+                proceeds: +proceeds.toFixed(2),
+                profit: +profit.toFixed(2),
+                gainPct: +gainPct.toFixed(2),
+                slotCapAfter: +newCap.toFixed(2),
+                durDays
+            });
+
+            slotUsed[s].add(pickedIdx);
+            slotCapital[s] = newCap;
+            slotLastSold[s] = sd;
+            anyTrade = true;
         }
-        if (!picked) break;
 
-        const buyPrice = parseNum(picked['AvgBuyPrice']) || parseNum(picked['BuyClPrice']);
-        const sellPrice = parseNum(picked['SoldPrice']);
-        if (!buyPrice || buyPrice <= 0 || capital < buyPrice) {
-            used.add(pickedIdx);
-            continue;
-        }
+        if (!anyTrade) break;
 
-        const shares = Math.floor(capital / buyPrice);
-        if (shares === 0) { used.add(pickedIdx); continue; }
-
-        const invested = shares * buyPrice;
-        const leftover = capital - invested;
-        const proceeds = shares * sellPrice;
-        const profit = proceeds - invested;
-        const gainPct = invested > 0 ? (profit / invested * 100) : 0;
-        const newCapital = leftover + proceeds;
-
-        const bd = predDateKey(picked) || '';
-        const sd = normalizeDateKey(picked['SoldDate']) || '';
-
-        // Duration in calendar days
-        let durDays = 0;
-        if (bd && sd) {
-            durDays = Math.max(0, Math.round((new Date(sd + 'T00:00:00') - new Date(bd + 'T00:00:00')) / 86400000));
-        }
-
-        trades.push({
-            num: trades.length + 1,
-            stock: picked['StockName'] || '',
-            buyDate: bd,
-            soldDate: sd,
-            buyPrice: +buyPrice.toFixed(2),
-            sellPrice: +sellPrice.toFixed(2),
-            shares,
-            invested: +invested.toFixed(2),
-            proceeds: +proceeds.toFixed(2),
-            profit: +profit.toFixed(2),
-            gainPct: +gainPct.toFixed(2),
-            capitalAfter: +newCapital.toFixed(2),
-            durDays
+        roundCapitals.push({
+            round: roundNum,
+            total: +slotCapital.reduce((a, b) => a + b, 0).toFixed(2),
+            slots: [...slotCapital]
         });
-
-        used.add(pickedIdx);
-        capital = newCapital;
-        lastSoldDate = sd;
     }
 
-    icTradesData = trades;
+    const finalCapital = slotCapital.reduce((a, b) => a + b, 0);
+    icTradesData = allTrades;
 
-    // Render
-    renderInvestCalcSummary(startingCapital, capital, trades);
-    renderInvestCalcTable(trades);
-    renderInvestCalcChart(startingCapital, trades);
+    renderInvestCalcSummary(startingCapital, finalCapital, allTrades, n, allocs, slotCapital);
+    renderInvestCalcSlotSummary(n, allocs, startingCapital, slotCapital, allTrades);
+    renderInvestCalcTable(allTrades, n);
+    renderInvestCalcChart(startingCapital, roundCapitals, n);
 
     noDataEl.style.display = 'none';
     tableWrap.style.display = 'block';
-    showToast('✅ Simulation complete — ' + trades.length + ' trades', 'success');
+    showToast('✅ Simulation done — ' + allTrades.length + ' trades across ' + n + ' slot(s)', 'success');
 }
 
-function renderInvestCalcSummary(start, finalCap, trades) {
+/* ── Summary cards (overall) ── */
+function renderInvestCalcSummary(start, finalCap, trades, n, allocs, slotCaps) {
     const el = document.getElementById('icSummary');
     if (!trades.length) { el.innerHTML = ''; return; }
 
     const profit = finalCap - start;
-    const ret = (profit / start * 100);
-    const wins = trades.filter(t => t.profit > 0);
+    const ret    = profit / start * 100;
+    const wins   = trades.filter(t => t.profit > 0);
     const losses = trades.filter(t => t.profit <= 0);
-    const best = trades.reduce((b, t) => t.profit > b.profit ? t : b, trades[0]);
-    const worst = trades.reduce((w, t) => t.profit < w.profit ? t : w, trades[0]);
+    const best   = trades.reduce((b, t) => t.profit > b.profit ? t : b, trades[0]);
+    const worst  = trades.reduce((w, t) => t.profit < w.profit ? t : w, trades[0]);
 
     const card = (label, val, cls, sub) =>
-        `<div class="stat-card${cls ? ' ' + cls : ''}" style="text-align:left;">
+        `<div class="stat-card${cls ? ' '+cls : ''}" style="text-align:left;">
             <div class="stat-lbl">${label}</div>
             <div class="stat-val">${val}</div>
             ${sub ? `<div style="font-size:10px;color:var(--text3);margin-top:3px;">${sub}</div>` : ''}
         </div>`;
 
     el.innerHTML =
-        card('Starting Capital', '₹' + start.toLocaleString('en-IN'), '', '') +
-        card('Final Capital', '₹' + Math.round(finalCap).toLocaleString('en-IN'), profit >= 0 ? 'gc' : 'rc', '') +
-        card('Total Profit', (profit >= 0 ? '+' : '') + '₹' + Math.round(profit).toLocaleString('en-IN') + ' (' + ret.toFixed(1) + '%)', profit >= 0 ? 'gc' : 'rc', '') +
-        card('Total Trades', trades.length, '', '') +
-        card('Winning Trades', wins.length + ' (' + (trades.length ? Math.round(wins.length / trades.length * 100) : 0) + '%)', 'gc', '') +
-        card('Losing Trades', losses.length + ' (' + (trades.length ? Math.round(losses.length / trades.length * 100) : 0) + '%)', losses.length ? 'rc' : '', '') +
-        card('Best Trade', '+₹' + Math.round(best.profit).toLocaleString('en-IN'), 'gc', best.stock) +
-        card('Worst Trade', '₹' + Math.round(worst.profit).toLocaleString('en-IN'), worst.profit < 0 ? 'rc' : '', worst.stock);
+        card('Starting Capital',  '₹'+start.toLocaleString('en-IN'), '', '') +
+        card('Final Capital',     '₹'+Math.round(finalCap).toLocaleString('en-IN'), profit>=0?'gc':'rc', '') +
+        card('Total Profit',      (profit>=0?'+':'')+'₹'+Math.round(profit).toLocaleString('en-IN')+' ('+ret.toFixed(1)+'%)', profit>=0?'gc':'rc', '') +
+        card('Total Trades',      trades.length, '', n+' parallel slot'+(n>1?'s':'')) +
+        card('Winning Trades',    wins.length+' ('+Math.round(wins.length/trades.length*100)+'%)', 'gc', '') +
+        card('Losing Trades',     losses.length+' ('+Math.round(losses.length/trades.length*100)+'%)', losses.length?'rc':'', '') +
+        card('Best Trade',        '+₹'+Math.round(best.profit).toLocaleString('en-IN'), 'gc', best.stock+' · '+best.slotLabel) +
+        card('Worst Trade',       '₹'+Math.round(worst.profit).toLocaleString('en-IN'), worst.profit<0?'rc':'', worst.stock+' · '+worst.slotLabel);
 }
 
-function renderInvestCalcTable(trades) {
+/* ── Per-slot summary strip ── */
+function renderInvestCalcSlotSummary(n, allocs, start, slotCaps, trades) {
+    const el = document.getElementById('icSlotSummary');
+    el.innerHTML = '';
+    for (let s = 0; s < n; s++) {
+        const col        = IC_COLORS[s];
+        const startCap   = start * allocs[s] / 100;
+        const finalCap   = slotCaps[s];
+        const profit     = finalCap - startCap;
+        const ret        = profit / startCap * 100;
+        const slotTrades = trades.filter(t => t.slot === s + 1);
+        const wins       = slotTrades.filter(t => t.profit > 0);
+
+        el.innerHTML += `
+        <div style="flex:1;min-width:190px;background:${col.light};border:1.5px solid ${col.border};
+                    border-radius:var(--radius);padding:12px 14px;">
+            <div style="font-size:11px;font-weight:800;color:${col.bg};text-transform:uppercase;
+                        letter-spacing:.5px;margin-bottom:8px;">${col.label} · ${allocs[s]}% Alloc</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <div>
+                    <div style="font-size:9px;color:var(--text3);font-weight:600;">Start Capital</div>
+                    <div style="font-size:13px;font-weight:800;color:${col.bg};">₹${Math.round(startCap).toLocaleString('en-IN')}</div>
+                </div>
+                <div>
+                    <div style="font-size:9px;color:var(--text3);font-weight:600;">Final Capital</div>
+                    <div style="font-size:13px;font-weight:800;color:${profit>=0?'#059669':'#dc2626'};">₹${Math.round(finalCap).toLocaleString('en-IN')}</div>
+                </div>
+                <div>
+                    <div style="font-size:9px;color:var(--text3);font-weight:600;">Profit / Return</div>
+                    <div style="font-size:13px;font-weight:800;color:${profit>=0?'#059669':'#dc2626'};">${profit>=0?'+':''}₹${Math.round(profit).toLocaleString('en-IN')} (${ret.toFixed(1)}%)</div>
+                </div>
+                <div>
+                    <div style="font-size:9px;color:var(--text3);font-weight:600;">Trades / Wins</div>
+                    <div style="font-size:13px;font-weight:800;color:${col.bg};">${slotTrades.length} / ${wins.length}</div>
+                </div>
+            </div>
+        </div>`;
+    }
+}
+
+/* ── Trade table ── */
+function renderInvestCalcTable(trades, n) {
     const tbody = document.getElementById('icTableBody');
     if (!trades.length) { tbody.innerHTML = ''; return; }
 
     tbody.innerHTML = trades.map(t => {
-        const pCls = t.profit > 0 ? 'green' : t.profit < 0 ? 'red' : '';
-        const bg = t.profit > 0 ? '#f0fdf4' : t.profit < 0 ? '#fff1f2' : '';
-        const bgStyle = bg ? `style="background:${bg}"` : '';
-        return `<tr ${bgStyle}>
-            <td>${t.num}</td>
+        const col   = IC_COLORS[t.slot - 1];
+        const pCls  = t.profit > 0 ? 'green' : t.profit < 0 ? 'red' : '';
+        const rowBg = t.profit > 0 ? '#f0fdf4' : t.profit < 0 ? '#fff1f2' : '';
+        return `<tr style="${rowBg ? 'background:'+rowBg : ''}">
+            <td style="font-weight:700">${t.round}</td>
+            <td><span style="background:${col.bg};color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;">${col.label}</span></td>
             <td style="font-weight:700">${t.stock}</td>
             <td>${t.buyDate}</td>
             <td>${t.soldDate}</td>
-            <td>₹${t.buyPrice.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
-            <td>₹${t.sellPrice.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td style="font-weight:700;color:${col.bg}">${t.allocPct}%</td>
+            <td>₹${Math.round(t.slotCapAfter - t.profit + t.invested - (t.slotCapAfter - t.proceeds)).toLocaleString('en-IN')}</td>
+            <td>₹${t.buyPrice.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+            <td>₹${t.sellPrice.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
             <td>${t.shares}</td>
-            <td>₹${t.invested.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
-            <td>₹${t.proceeds.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
-            <td class="${pCls}" style="font-weight:700">${t.profit >= 0 ? '+' : ''}₹${t.profit.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
-            <td class="${pCls}">${t.gainPct >= 0 ? '+' : ''}${t.gainPct.toFixed(2)}%</td>
-            <td style="font-weight:700;color:var(--blue2)">₹${Math.round(t.capitalAfter).toLocaleString('en-IN')}</td>
-            <td>${t.durDays}d</td>
+            <td>₹${t.invested.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+            <td>₹${t.proceeds.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+            <td class="${pCls}" style="font-weight:700">${t.profit>=0?'+':''}₹${t.profit.toLocaleString('en-IN',{minimumFractionDigits:2})}</td>
+            <td class="${pCls}">${t.gainPct>=0?'+':''}${t.gainPct.toFixed(2)}%</td>
+            <td style="font-weight:700;color:${col.bg}">₹${Math.round(t.slotCapAfter).toLocaleString('en-IN')}</td>
         </tr>`;
     }).join('');
 }
 
-function renderInvestCalcChart(start, trades) {
+/* ── Chart ── */
+function renderInvestCalcChart(start, roundCapitals, n) {
     const ctx = document.getElementById('icChart');
     if (!ctx) return;
     if (icChartObj) { icChartObj.destroy(); icChartObj = null; }
 
-    const labels = ['Start', ...trades.map((t, i) => '#' + (i + 1) + ' ' + t.stock)];
-    const capitals = [start, ...trades.map(t => t.capitalAfter)];
-    const colors = [
-        'rgba(37,99,235,0.5)',
-        ...trades.map(t => t.profit >= 0 ? 'rgba(16,185,129,0.65)' : 'rgba(239,68,68,0.65)')
-    ];
+    const labels   = roundCapitals.map(r => r.round === 0 ? 'Start' : 'T'+r.round);
+    const totalCaps = roundCapitals.map(r => r.total);
 
     const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 280);
     gradient.addColorStop(0, 'rgba(37,99,235,0.35)');
     gradient.addColorStop(1, 'rgba(37,99,235,0.02)');
 
+    const datasets = [
+        {
+            type: 'line', label: 'Total Capital (₹)',
+            data: totalCaps, borderColor: '#2563eb', backgroundColor: gradient,
+            fill: true, tension: 0.35, borderWidth: 3,
+            pointRadius: 4, pointBackgroundColor: '#2563eb', pointHoverRadius: 7,
+            yAxisID: 'y'
+        }
+    ];
+
+    // Add a line per slot
+    for (let s = 0; s < n; s++) {
+        datasets.push({
+            type: 'line', label: IC_COLORS[s].label+' (₹)',
+            data: roundCapitals.map(r => +r.slots[s].toFixed(2)),
+            borderColor: IC_COLORS[s].bg, backgroundColor: 'transparent',
+            borderWidth: 2, borderDash: [5, 3],
+            pointRadius: 3, pointBackgroundColor: IC_COLORS[s].bg,
+            fill: false, tension: 0.3, yAxisID: 'y'
+        });
+    }
+
     icChartObj = new Chart(ctx, {
         type: 'bar',
-        data: {
-            labels,
-            datasets: [
-                {
-                    type: 'line',
-                    label: 'Capital (₹)',
-                    data: capitals,
-                    borderColor: '#2563eb',
-                    backgroundColor: gradient,
-                    fill: true,
-                    tension: 0.35,
-                    borderWidth: 3,
-                    pointRadius: 5,
-                    pointBackgroundColor: '#2563eb',
-                    pointHoverRadius: 8,
-                    yAxisID: 'y'
-                },
-                {
-                    type: 'bar',
-                    label: 'Trade P&L (₹)',
-                    data: [0, ...trades.map(t => t.profit)],
-                    backgroundColor: colors,
-                    borderWidth: 0,
-                    yAxisID: 'y1',
-                    borderRadius: 4
-                }
-            ]
-        },
+        data: { labels, datasets },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
-                legend: { labels: { color: '#334155', font: { weight: 'bold', size: 11 }, usePointStyle: true, padding: 10 } },
-                tooltip: {
-                    callbacks: {
-                        label: c => {
-                            if (c.dataset.label === 'Capital (₹)')
-                                return 'Capital: ₹' + Math.round(c.raw).toLocaleString('en-IN');
-                            const v = c.raw;
-                            return 'P&L: ' + (v >= 0 ? '+' : '') + '₹' + Math.round(v).toLocaleString('en-IN');
-                        }
-                    }
-                }
+                legend: { labels: { color:'#334155', font:{weight:'bold',size:10}, usePointStyle:true, padding:8 } },
+                tooltip: { callbacks: { label: c => c.dataset.label+': ₹'+Math.round(c.raw).toLocaleString('en-IN') } }
             },
             scales: {
-                x: { ticks: { color: '#64748b', maxRotation: 45, autoSkip: true, maxTicksLimit: 14, font: { size: 10 } }, grid: { display: false } },
-                y: { position: 'left', ticks: { color: '#2563eb', callback: v => '₹' + Math.round(v).toLocaleString('en-IN'), font: { weight: 'bold', size: 10 } }, grid: { color: '#e2e8f0' }, title: { display: true, text: 'Capital', color: '#2563eb', font: { weight: 'bold', size: 10 } } },
-                y1: { position: 'right', ticks: { color: '#64748b', callback: v => '₹' + Math.round(v).toLocaleString('en-IN'), font: { size: 10 } }, grid: { display: false }, title: { display: true, text: 'Trade P&L', color: '#64748b', font: { weight: 'bold', size: 10 } } }
+                x: { ticks:{color:'#64748b',maxRotation:45,autoSkip:true,maxTicksLimit:16,font:{size:9}}, grid:{display:false} },
+                y: { position:'left', ticks:{color:'#2563eb',callback:v=>'₹'+Math.round(v).toLocaleString('en-IN'),font:{weight:'bold',size:9}}, grid:{color:'#e2e8f0'} }
             }
         }
     });
 }
 
+/* ── CSV Export ── */
 function exportInvestCalcCSV() {
     if (!icTradesData.length) { showToast('Run simulation first', 'error'); return; }
-    const headers = ['#','Stock','Buy Date','Sold Date','Buy Price','Sell Price','Shares','Invested','Proceeds','Profit/Loss','Return %','Capital After','Duration (Days)'];
+    const headers = ['Round','Slot','Stock','Buy Date','Sold Date','Alloc %',
+        'Buy Price','Sell Price','Shares','Invested','Proceeds','Profit/Loss','Return %','Slot Capital After','Duration Days'];
     const rows = icTradesData.map(t => [
-        t.num, t.stock, t.buyDate, t.soldDate,
-        t.buyPrice, t.sellPrice, t.shares,
-        t.invested, t.proceeds, t.profit, t.gainPct, t.capitalAfter, t.durDays
+        t.round, t.slotLabel, t.stock, t.buyDate, t.soldDate, t.allocPct,
+        t.buyPrice, t.sellPrice, t.shares, t.invested, t.proceeds,
+        t.profit, t.gainPct, t.slotCapAfter, t.durDays
     ]);
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
     const a = document.createElement('a');
@@ -4606,6 +4772,9 @@ function exportInvestCalcCSV() {
     a.click();
     showToast('✅ CSV exported!', 'success');
 }
+
+/* Init slot controls on page load */
+document.addEventListener('DOMContentLoaded', () => { icUpdateSlots(); });
 </script>
 </body>
 </html>
