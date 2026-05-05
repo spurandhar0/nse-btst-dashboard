@@ -315,6 +315,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
   <div class="tab"        data-tab="forceExit"    onclick="switchTab('forceExit')">Force Exit</div>
   <div class="tab"        data-tab="marketData"   onclick="switchTab('marketData')">Market Data</div>
   <div class="tab"        data-tab="disclaimer"   onclick="switchTab('disclaimer')">Disclaimer</div>
+  <div class="tab"        data-tab="investCalc"   onclick="switchTab('investCalc')">💰 Invest Calc</div>
 </div>
 
 <!-- PANELS -->
@@ -488,6 +489,49 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
     <p style="margin:10px 0;">I am <b style="color:var(--red);">NOT responsible</b> for any profit, loss, or damages arising from the use of this dashboard.</p>
     <p style="margin:10px 0;"><b style="color:var(--blue2);">I am NOT a SEBI registered advisor.</b> Please consult a certified financial advisor before investing.</p>
     <p style="margin-top:16px;font-weight:700;color:var(--text3);font-size:12px;">By using this dashboard, you acknowledge and agree to this disclaimer.</p>
+  </div>
+</div>
+
+<!-- INVESTMENT CALCULATOR TAB -->
+<div id="investCalc" class="card hidden">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+    <div>
+      <h3 style="margin:0;color:var(--navy);font-size:18px;font-weight:800;">💰 Sequential Investment Calculator</h3>
+      <div style="font-size:12px;color:var(--text3);margin-top:3px;">One stock at a time · Sell → Reinvest full capital → Next available closed pick</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <label style="font-size:12px;font-weight:700;color:var(--text2);">Starting Capital (₹):</label>
+      <input type="number" id="icCapital" value="10000" min="1000" step="1000" style="width:120px;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);font-weight:700;font-size:13px;" oninput="runInvestCalc()">
+      <button onclick="runInvestCalc()" style="padding:7px 16px;font-size:12px;">▶ Run Simulation</button>
+      <button onclick="exportInvestCalcCSV()" style="padding:7px 16px;font-size:12px;background:#059669;">⬇ Export CSV</button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div id="icSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:18px;"></div>
+
+  <!-- Capital Growth Chart -->
+  <div class="chart-box" style="margin-bottom:18px;">
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">📈 Capital Growth Over Trades</div>
+    <div style="height:280px;position:relative;"><canvas id="icChart"></canvas></div>
+  </div>
+
+  <!-- Trade Table -->
+  <div id="icNoData" style="text-align:center;padding:40px;color:var(--text3);font-size:14px;display:block;">
+    ⚙️ Load your Excel data first, then click <b>Run Simulation</b>
+  </div>
+  <div class="table-area" id="icTableWrap" style="display:none;">
+    <table id="icTable">
+      <thead>
+        <tr>
+          <th>#</th><th>Stock</th><th>Buy Date</th><th>Sold Date</th>
+          <th>Buy Price (₹)</th><th>Sell Price (₹)</th><th>Shares</th>
+          <th>Invested (₹)</th><th>Proceeds (₹)</th>
+          <th>Profit/Loss (₹)</th><th>Return %</th><th>Capital After (₹)</th><th>Duration (Days)</th>
+        </tr>
+      </thead>
+      <tbody id="icTableBody"></tbody>
+    </table>
   </div>
 </div>
 
@@ -4291,6 +4335,276 @@ async function exportHoldPerformanceImage(trades, wins, losses, winAmt, lossAmt,
     } finally {
         setLoading(false);
     }
+}
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   INVESTMENT CALCULATOR — Sequential One-at-a-Time Simulation
+   ═══════════════════════════════════════════════════════════ */
+
+let icTradesData = [];
+let icChartObj = null;
+
+function runInvestCalc() {
+    const startingCapital = parseFloat(document.getElementById('icCapital').value) || 10000;
+    const noDataEl = document.getElementById('icNoData');
+    const tableWrap = document.getElementById('icTableWrap');
+    const summaryEl = document.getElementById('icSummary');
+
+    // Need allRows loaded
+    if (!allRows || !allRows.length) {
+        noDataEl.innerHTML = '⚠️ No data loaded. Please wait for data to load first.';
+        noDataEl.style.display = 'block';
+        tableWrap.style.display = 'none';
+        summaryEl.innerHTML = '';
+        return;
+    }
+
+    // Filter: BuyCount === 1, Status === Closed, has SoldPrice > 0
+    const closed = allRows.filter(r => {
+        const buyCount = parseInt(String(r['BuyCount'] || '0').replace(/,/g, '')) || 0;
+        const st = statusNorm(r);
+        const soldP = parseNum(r['SoldPrice']);
+        return buyCount === 1 && (st === 'closed' || isClosed(r)) && soldP > 0;
+    });
+
+    if (!closed.length) {
+        noDataEl.innerHTML = '⚠️ No closed single-buy trades found in data. Load your full QuickRun Excel file first.';
+        noDataEl.style.display = 'block';
+        tableWrap.style.display = 'none';
+        summaryEl.innerHTML = '';
+        return;
+    }
+
+    // Sort by BuyDate ascending
+    closed.sort((a, b) => {
+        const da = predDateKey(a) || '';
+        const db = predDateKey(b) || '';
+        return da > db ? 1 : da < db ? -1 : 0;
+    });
+
+    // Sequential simulation
+    let capital = startingCapital;
+    let lastSoldDate = '0000-00-00';
+    const used = new Set();
+    const trades = [];
+
+    for (let guard = 0; guard < 2000; guard++) {
+        // Find the first unused trade with BuyDate > lastSoldDate
+        let picked = null;
+        let pickedIdx = -1;
+        for (let i = 0; i < closed.length; i++) {
+            if (used.has(i)) continue;
+            const bd = predDateKey(closed[i]) || '';
+            if (bd > lastSoldDate) {
+                picked = closed[i];
+                pickedIdx = i;
+                break;
+            }
+        }
+        if (!picked) break;
+
+        const buyPrice = parseNum(picked['AvgBuyPrice']) || parseNum(picked['BuyClPrice']);
+        const sellPrice = parseNum(picked['SoldPrice']);
+        if (!buyPrice || buyPrice <= 0 || capital < buyPrice) {
+            used.add(pickedIdx);
+            continue;
+        }
+
+        const shares = Math.floor(capital / buyPrice);
+        if (shares === 0) { used.add(pickedIdx); continue; }
+
+        const invested = shares * buyPrice;
+        const leftover = capital - invested;
+        const proceeds = shares * sellPrice;
+        const profit = proceeds - invested;
+        const gainPct = invested > 0 ? (profit / invested * 100) : 0;
+        const newCapital = leftover + proceeds;
+
+        const bd = predDateKey(picked) || '';
+        const sd = normalizeDateKey(picked['SoldDate']) || '';
+
+        // Duration in calendar days
+        let durDays = 0;
+        if (bd && sd) {
+            durDays = Math.max(0, Math.round((new Date(sd + 'T00:00:00') - new Date(bd + 'T00:00:00')) / 86400000));
+        }
+
+        trades.push({
+            num: trades.length + 1,
+            stock: picked['StockName'] || '',
+            buyDate: bd,
+            soldDate: sd,
+            buyPrice: +buyPrice.toFixed(2),
+            sellPrice: +sellPrice.toFixed(2),
+            shares,
+            invested: +invested.toFixed(2),
+            proceeds: +proceeds.toFixed(2),
+            profit: +profit.toFixed(2),
+            gainPct: +gainPct.toFixed(2),
+            capitalAfter: +newCapital.toFixed(2),
+            durDays
+        });
+
+        used.add(pickedIdx);
+        capital = newCapital;
+        lastSoldDate = sd;
+    }
+
+    icTradesData = trades;
+
+    // Render
+    renderInvestCalcSummary(startingCapital, capital, trades);
+    renderInvestCalcTable(trades);
+    renderInvestCalcChart(startingCapital, trades);
+
+    noDataEl.style.display = 'none';
+    tableWrap.style.display = 'block';
+    showToast('✅ Simulation complete — ' + trades.length + ' trades', 'success');
+}
+
+function renderInvestCalcSummary(start, finalCap, trades) {
+    const el = document.getElementById('icSummary');
+    if (!trades.length) { el.innerHTML = ''; return; }
+
+    const profit = finalCap - start;
+    const ret = (profit / start * 100);
+    const wins = trades.filter(t => t.profit > 0);
+    const losses = trades.filter(t => t.profit <= 0);
+    const best = trades.reduce((b, t) => t.profit > b.profit ? t : b, trades[0]);
+    const worst = trades.reduce((w, t) => t.profit < w.profit ? t : w, trades[0]);
+
+    const card = (label, val, cls, sub) =>
+        `<div class="stat-card${cls ? ' ' + cls : ''}" style="text-align:left;">
+            <div class="stat-lbl">${label}</div>
+            <div class="stat-val">${val}</div>
+            ${sub ? `<div style="font-size:10px;color:var(--text3);margin-top:3px;">${sub}</div>` : ''}
+        </div>`;
+
+    el.innerHTML =
+        card('Starting Capital', '₹' + start.toLocaleString('en-IN'), '', '') +
+        card('Final Capital', '₹' + Math.round(finalCap).toLocaleString('en-IN'), profit >= 0 ? 'gc' : 'rc', '') +
+        card('Total Profit', (profit >= 0 ? '+' : '') + '₹' + Math.round(profit).toLocaleString('en-IN') + ' (' + ret.toFixed(1) + '%)', profit >= 0 ? 'gc' : 'rc', '') +
+        card('Total Trades', trades.length, '', '') +
+        card('Winning Trades', wins.length + ' (' + (trades.length ? Math.round(wins.length / trades.length * 100) : 0) + '%)', 'gc', '') +
+        card('Losing Trades', losses.length + ' (' + (trades.length ? Math.round(losses.length / trades.length * 100) : 0) + '%)', losses.length ? 'rc' : '', '') +
+        card('Best Trade', '+₹' + Math.round(best.profit).toLocaleString('en-IN'), 'gc', best.stock) +
+        card('Worst Trade', '₹' + Math.round(worst.profit).toLocaleString('en-IN'), worst.profit < 0 ? 'rc' : '', worst.stock);
+}
+
+function renderInvestCalcTable(trades) {
+    const tbody = document.getElementById('icTableBody');
+    if (!trades.length) { tbody.innerHTML = ''; return; }
+
+    tbody.innerHTML = trades.map(t => {
+        const pCls = t.profit > 0 ? 'green' : t.profit < 0 ? 'red' : '';
+        const bg = t.profit > 0 ? '#f0fdf4' : t.profit < 0 ? '#fff1f2' : '';
+        const bgStyle = bg ? `style="background:${bg}"` : '';
+        return `<tr ${bgStyle}>
+            <td>${t.num}</td>
+            <td style="font-weight:700">${t.stock}</td>
+            <td>${t.buyDate}</td>
+            <td>${t.soldDate}</td>
+            <td>₹${t.buyPrice.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td>₹${t.sellPrice.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td>${t.shares}</td>
+            <td>₹${t.invested.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td>₹${t.proceeds.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td class="${pCls}" style="font-weight:700">${t.profit >= 0 ? '+' : ''}₹${t.profit.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td class="${pCls}">${t.gainPct >= 0 ? '+' : ''}${t.gainPct.toFixed(2)}%</td>
+            <td style="font-weight:700;color:var(--blue2)">₹${Math.round(t.capitalAfter).toLocaleString('en-IN')}</td>
+            <td>${t.durDays}d</td>
+        </tr>`;
+    }).join('');
+}
+
+function renderInvestCalcChart(start, trades) {
+    const ctx = document.getElementById('icChart');
+    if (!ctx) return;
+    if (icChartObj) { icChartObj.destroy(); icChartObj = null; }
+
+    const labels = ['Start', ...trades.map((t, i) => '#' + (i + 1) + ' ' + t.stock)];
+    const capitals = [start, ...trades.map(t => t.capitalAfter)];
+    const colors = [
+        'rgba(37,99,235,0.5)',
+        ...trades.map(t => t.profit >= 0 ? 'rgba(16,185,129,0.65)' : 'rgba(239,68,68,0.65)')
+    ];
+
+    const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 280);
+    gradient.addColorStop(0, 'rgba(37,99,235,0.35)');
+    gradient.addColorStop(1, 'rgba(37,99,235,0.02)');
+
+    icChartObj = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    type: 'line',
+                    label: 'Capital (₹)',
+                    data: capitals,
+                    borderColor: '#2563eb',
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.35,
+                    borderWidth: 3,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#2563eb',
+                    pointHoverRadius: 8,
+                    yAxisID: 'y'
+                },
+                {
+                    type: 'bar',
+                    label: 'Trade P&L (₹)',
+                    data: [0, ...trades.map(t => t.profit)],
+                    backgroundColor: colors,
+                    borderWidth: 0,
+                    yAxisID: 'y1',
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { labels: { color: '#334155', font: { weight: 'bold', size: 11 }, usePointStyle: true, padding: 10 } },
+                tooltip: {
+                    callbacks: {
+                        label: c => {
+                            if (c.dataset.label === 'Capital (₹)')
+                                return 'Capital: ₹' + Math.round(c.raw).toLocaleString('en-IN');
+                            const v = c.raw;
+                            return 'P&L: ' + (v >= 0 ? '+' : '') + '₹' + Math.round(v).toLocaleString('en-IN');
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#64748b', maxRotation: 45, autoSkip: true, maxTicksLimit: 14, font: { size: 10 } }, grid: { display: false } },
+                y: { position: 'left', ticks: { color: '#2563eb', callback: v => '₹' + Math.round(v).toLocaleString('en-IN'), font: { weight: 'bold', size: 10 } }, grid: { color: '#e2e8f0' }, title: { display: true, text: 'Capital', color: '#2563eb', font: { weight: 'bold', size: 10 } } },
+                y1: { position: 'right', ticks: { color: '#64748b', callback: v => '₹' + Math.round(v).toLocaleString('en-IN'), font: { size: 10 } }, grid: { display: false }, title: { display: true, text: 'Trade P&L', color: '#64748b', font: { weight: 'bold', size: 10 } } }
+            }
+        }
+    });
+}
+
+function exportInvestCalcCSV() {
+    if (!icTradesData.length) { showToast('Run simulation first', 'error'); return; }
+    const headers = ['#','Stock','Buy Date','Sold Date','Buy Price','Sell Price','Shares','Invested','Proceeds','Profit/Loss','Return %','Capital After','Duration (Days)'];
+    const rows = icTradesData.map(t => [
+        t.num, t.stock, t.buyDate, t.soldDate,
+        t.buyPrice, t.sellPrice, t.shares,
+        t.invested, t.proceeds, t.profit, t.gainPct, t.capitalAfter, t.durDays
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'InvestCalc_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    showToast('✅ CSV exported!', 'success');
 }
 </script>
 </body>
