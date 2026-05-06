@@ -285,6 +285,8 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
   <span style="font-size:11px;font-weight:800;color:rgba(255,255,255,.45);letter-spacing:.8px;text-transform:uppercase;margin-right:4px;">📈 INDICES</span>
   <div id="idxNifty50" class="idx-card"><span class="idx-loading">Loading NIFTY 50…</span></div>
   <div id="idxBankNifty" class="idx-card"><span class="idx-loading">Loading BANKNIFTY…</span></div>
+  <div id="idxSensex" class="idx-card"><span class="idx-loading">Loading SENSEX…</span></div>
+  <div id="idxNiftyIT" class="idx-card"><span class="idx-loading">Loading NIFTY IT…</span></div>
   <span id="idxUpdated" style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;"></span>
 </div>
 
@@ -4841,7 +4843,9 @@ function foBadge(sym) {
             const fmt = v => v.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             const ids = {
                 'NIFTY 50': 'idxNifty50',
-                'BANKNIFTY': 'idxBankNifty'
+                'BANKNIFTY': 'idxBankNifty',
+                'SENSEX': 'idxSensex',
+                'NIFTY IT': 'idxNiftyIT'
             };
             data.indices.forEach(idx => {
                 const el = document.getElementById(ids[idx.label]);
@@ -4864,7 +4868,7 @@ function foBadge(sym) {
             if (updEl && data.updated_at) updEl.textContent = '🕐 ' + data.updated_at;
         })
         .catch(() => {
-            ['idxNifty50','idxBankNifty'].forEach(id => {
+            ['idxNifty50','idxBankNifty','idxSensex','idxNiftyIT'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = '<span class="idx-loading">Data unavailable</span>';
             });
