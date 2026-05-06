@@ -1,5 +1,5 @@
 {
-  "updated_at": "06-May-2026 08:17 PM IST",
+  "updated_at": "06-May-2026 08:22 PM IST",
   "indices": [
     {
       "label": "NIFTY 50",
@@ -23,6 +23,30 @@
       "low": 54587.2,
       "change": 1434.0,
       "change_pct": 2.63,
+      "date": "06-May-2026"
+    },
+    {
+      "label": "SENSEX",
+      "ticker": "^BSESN",
+      "close": 77958.52,
+      "prev_close": 77017.79,
+      "open": 77424.36,
+      "high": 78022.78,
+      "low": 76773.25,
+      "change": 940.73,
+      "change_pct": 1.22,
+      "date": "06-May-2026"
+    },
+    {
+      "label": "NIFTY IT",
+      "ticker": "^CNXIT",
+      "close": 29267.95,
+      "prev_close": 29107.3,
+      "open": 29435.5,
+      "high": 29646.05,
+      "low": 29123.8,
+      "change": 160.65,
+      "change_pct": 0.55,
       "date": "06-May-2026"
     }
   ]
