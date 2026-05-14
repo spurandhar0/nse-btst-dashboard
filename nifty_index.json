@@ -1,5 +1,5 @@
 {
-  "updated_at": "14-May-2026 03:34 PM IST",
+  "updated_at": "14-May-2026 03:43 PM IST",
   "indices": [
     {
       "label": "NIFTY 50",
@@ -28,12 +28,12 @@
     {
       "label": "SENSEX",
       "ticker": "^BSESN",
-      "close": 75394.71,
+      "close": 75394.28,
       "prev_close": 74608.98,
       "open": 74947.12,
       "high": 75681.88,
       "low": 74526.77,
-      "change": 785.73,
+      "change": 785.3,
       "change_pct": 1.05,
       "date": "14-May-2026"
     },
