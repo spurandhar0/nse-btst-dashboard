@@ -1,0 +1,9 @@
+# Treat Excel files as binary — prevents git from storing diffs and reduces repo bloat
+*.xlsx binary
+*.xls  binary
+
+# Treat JSON as text with LF line endings
+*.json text eol=lf
+
+# Treat HTML as text with LF line endings
+*.html text eol=lf
