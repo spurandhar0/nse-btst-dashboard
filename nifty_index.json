@@ -1,5 +1,5 @@
 {
-  "updated_at": "22-May-2026 09:32 PM IST",
+  "updated_at": "25-May-2026 05:16 AM IST",
   "indices": [
     {
       "label": "NIFTY 50",
@@ -40,12 +40,12 @@
     {
       "label": "NIFTY IT",
       "ticker": "^CNXIT",
-      "close": 28912.45,
+      "close": 28912.5,
       "prev_close": 29021.1,
       "open": 29072.6,
       "high": 29181.95,
       "low": 28792.5,
-      "change": -108.65,
+      "change": -108.6,
       "change_pct": -0.37,
       "date": "22-May-2026"
     }
