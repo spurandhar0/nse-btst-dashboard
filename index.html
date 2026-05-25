@@ -1102,7 +1102,7 @@ function populateDates(){
         setLoading(false);
         return
     }
-    selectedDate=dates[0];
+    selectedDate='';
     els.dateBox.classList.remove('hidden');
     els.dateBox.style.display='flex';
     els.tabs.classList.remove('hidden');
@@ -1118,13 +1118,13 @@ function populateDates(){
     if(lastSigEl && dates.length){
         lastSigEl.textContent = '📅 Last Signal: ' + dates[0];
     }
-    // On initial load, Signal Date is selected by default — disable range inputs
+    // On initial load, All Dates is default — enable range inputs
     const fromEl=document.getElementById('fromDate');
     const toEl=document.getElementById('toDate');
     const applyBtn=document.querySelector('button[onclick="applyDateRange()"]');
-    if(fromEl){fromEl.disabled=true;fromEl.style.opacity='0.4';fromEl.title='Select "All Dates" in Signal Date to use range filter';}
-    if(toEl){toEl.disabled=true;toEl.style.opacity='0.4';toEl.title='Select "All Dates" in Signal Date to use range filter';}
-    if(applyBtn){applyBtn.disabled=true;applyBtn.style.opacity='0.4';applyBtn.style.cursor='not-allowed';}
+    if(fromEl){fromEl.disabled=false;fromEl.style.opacity='1';fromEl.title='';}
+    if(toEl){toEl.disabled=false;toEl.style.opacity='1';toEl.title='';}
+    if(applyBtn){applyBtn.disabled=false;applyBtn.style.opacity='1';applyBtn.style.cursor='pointer';}
     setLoading(false)
 }
 
