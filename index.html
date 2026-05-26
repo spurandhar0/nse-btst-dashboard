@@ -760,7 +760,7 @@ async function autoLoadFromGitHubPages() {
 
         // Update status bar
         if (banner) {
-            const label = lastRun ? '✅ Live data loaded' : '✅ Data loaded';
+            const label = g_lastRun ? '✅ Live data loaded' : '✅ Data loaded';
             banner.querySelector('#autoLoadText').textContent = label;
             banner.style.background = 'rgba(5,150,105,0.12)';
             banner.style.borderColor = '#059669';
