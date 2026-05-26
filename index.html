@@ -653,6 +653,20 @@ const pageState={calls:{page:1,size:100},ledger:{page:1,size:100},holding:{page:
 // ── AUTO-FETCH from GitHub Pages ──────────────────────────────────────────
 // When dashboard is opened on GitHub Pages, automatically load latest_quickrun.xlsx
 // Falls back gracefully when opened locally (file:// protocol)
+let g_lastRun = '';
+let g_dataDate = '';
+function _updateHeaderBadge() {
+    const el = document.getElementById('fileInfo');
+    if(!el) return;
+    if(!g_dataDate && !g_lastRun) { el.textContent = 'Loading data...'; return; }
+    const parts = [];
+    if(g_dataDate) parts.push('Data: ' + g_dataDate);
+    if(g_lastRun) parts.push('Updated: ' + g_lastRun);
+    el.innerHTML = parts.join('&nbsp;&nbsp;|&nbsp;&nbsp;');
+    el.style.background = 'rgba(5,150,105,0.2)';
+    el.style.borderColor = 'rgba(5,150,105,0.5)';
+    el.style.color = '';
+}
 async function autoLoadFromGitHubPages() {
     // Reset state for re-run
     const banner = document.getElementById('autoLoadBanner');
@@ -668,7 +682,6 @@ async function autoLoadFromGitHubPages() {
 
     try {
         // Read meta.json first (small file) to get last run time
-        let lastRun = '';
         try {
             const metaResp = await fetch(META_URL + '?t=' + Date.now());
             if (metaResp.ok) {
@@ -677,7 +690,8 @@ async function autoLoadFromGitHubPages() {
                     const d = new Date(meta.last_run);
                     const dStr = d.toLocaleDateString('en-GB', {timeZone:'Asia/Kolkata', day:'2-digit', month:'short', year:'numeric'}).replace(/ /g, '-');
                     const tStr = d.toLocaleTimeString('en-US', {timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', hour12:true}).toUpperCase();
-                    lastRun = dStr + ' · ' + tStr + ' IST';
+                    g_lastRun = dStr + ' · ' + tStr + ' IST';
+                    _updateHeaderBadge();
                 }
             }
         } catch(e) {}
@@ -750,12 +764,7 @@ async function autoLoadFromGitHubPages() {
             banner.querySelector('#autoLoadText').style.color = '#059669';
         }
         // Update header badge — single unified timestamp display
-        const fileInfo = document.getElementById('fileInfo');
-        if (fileInfo) {
-            fileInfo.textContent = lastRun ? '📅 ' + lastRun + ' IST' : '🟢 Data Loaded';
-            fileInfo.style.background = 'rgba(5,150,105,0.2)';
-            fileInfo.style.borderColor = 'rgba(5,150,105,0.5)';
-        }
+        // fileInfo updated via _updateHeaderBadge()
 
     } catch(err) {
         console.warn('Auto-load failed:', err.message);
@@ -1112,7 +1121,9 @@ function populateDates(){
         const allDateSet = new Set();
         for(const r of allRows) { const d = predDateKey(r); if(d) allDateSet.add(d); }
         const allSorted = Array.from(allDateSet).sort((a,b) => new Date(b+'T00:00:00') - new Date(a+'T00:00:00'));
-        lastSigEl.textContent = allSorted.length ? '📅 Last Signal: ' + allSorted[0] : (dates.length ? '📅 Last Signal: ' + dates[0] : '');
+        g_dataDate = allSorted.length ? allSorted[0] : (dates.length ? dates[0] : '');
+        lastSigEl.textContent = g_dataDate ? 'Last Signal: ' + g_dataDate : '';
+        _updateHeaderBadge();
     }
     // On initial load, All Dates is default — enable range inputs
     const fromEl=document.getElementById('fromDate');
