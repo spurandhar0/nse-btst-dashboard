@@ -659,10 +659,12 @@ function _updateHeaderBadge() {
     const el = document.getElementById('fileInfo');
     if(!el) return;
     if(!g_dataDate && !g_lastRun) { el.textContent = 'Loading data...'; return; }
-    const parts = [];
-    if(g_dataDate) parts.push('Data: ' + g_dataDate);
-    if(g_lastRun) parts.push('Updated: ' + g_lastRun);
-    el.innerHTML = parts.join('&nbsp;&nbsp;|&nbsp;&nbsp;');
+    // "Dashboard Updated: 25-May-2026  09:37 PM IST"
+    // g_dataDate = latest record date; g_lastRun = time only (HH:MM AM/PM IST)
+    let label = 'Dashboard Updated: ';
+    if(g_dataDate) label += g_dataDate;
+    if(g_lastRun) label += '  ' + g_lastRun;
+    el.textContent = label;
     el.style.background = 'rgba(5,150,105,0.2)';
     el.style.borderColor = 'rgba(5,150,105,0.5)';
     el.style.color = '';
@@ -690,7 +692,7 @@ async function autoLoadFromGitHubPages() {
                     const d = new Date(meta.last_run);
                     const dStr = d.toLocaleDateString('en-GB', {timeZone:'Asia/Kolkata', day:'2-digit', month:'short', year:'numeric'}).replace(/ /g, '-');
                     const tStr = d.toLocaleTimeString('en-US', {timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', hour12:true}).toUpperCase();
-                    g_lastRun = dStr + ' · ' + tStr + ' IST';
+                    g_lastRun = tStr + ' IST';
                     _updateHeaderBadge();
                 }
             }
