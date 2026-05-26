@@ -275,7 +275,6 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
     </div>
     <div class="hdr-right">
       <div class="hdr-badge" id="fileInfo">Loading data...</div>
-      <div id="lastRunBadge" class="hdr-badge" style="display:none;"></div>
       <input id="file" type="file" accept=".xlsx,.xls,.xlsm,.XLSX,.XLS,.XLSM" hidden>
     </div>
   </div>
@@ -287,7 +286,7 @@ footer span{color:rgba(255,255,255,.85);font-weight:700;}
   <div id="idxBankNifty" class="idx-card"><span class="idx-loading">Loading BANKNIFTY…</span></div>
   <div id="idxSensex" class="idx-card"><span class="idx-loading">Loading SENSEX…</span></div>
   <div id="idxNiftyIT" class="idx-card"><span class="idx-loading">Loading NIFTY IT…</span></div>
-  <span id="idxUpdated" style="font-size:10px;color:rgba(255,255,255,.3);margin-left:auto;"></span>
+
 </div>
 
 <div id="autoLoadBanner" style="display:flex;align-items:center;justify-content:center;gap:12px;padding:7px 20px;background:rgba(37,99,235,.08);border-bottom:2px solid #2563eb;font-size:12.5px;font-weight:600;">
@@ -676,9 +675,9 @@ async function autoLoadFromGitHubPages() {
                 const meta = await metaResp.json();
                 if (meta.last_run) {
                     const d = new Date(meta.last_run);
-                    lastRun = d.toLocaleString('en-IN', {timeZone:'Asia/Kolkata',
-                        day:'2-digit', month:'short', year:'numeric',
-                        hour:'2-digit', minute:'2-digit'});
+                    const dStr = d.toLocaleDateString('en-GB', {timeZone:'Asia/Kolkata', day:'2-digit', month:'short', year:'numeric'}).replace(/ /g, '-');
+                    const tStr = d.toLocaleTimeString('en-US', {timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', hour12:true}).toUpperCase();
+                    lastRun = dStr + ' · ' + tStr + ' IST';
                 }
             }
         } catch(e) {}
@@ -744,24 +743,18 @@ async function autoLoadFromGitHubPages() {
 
         // Update status bar
         if (banner) {
-            const label = lastRun ? '✅ Live data — Last run: ' + lastRun + ' IST' : '✅ Data loaded';
+            const label = lastRun ? '✅ Live data loaded' : '✅ Data loaded';
             banner.querySelector('#autoLoadText').textContent = label;
             banner.style.background = 'rgba(5,150,105,0.12)';
             banner.style.borderColor = '#059669';
             banner.querySelector('#autoLoadText').style.color = '#059669';
         }
-        // Update header badge
+        // Update header badge — single unified timestamp display
         const fileInfo = document.getElementById('fileInfo');
         if (fileInfo) {
-            fileInfo.textContent = lastRun ? '🟢 Live — ' + lastRun : '🟢 Data Loaded';
+            fileInfo.textContent = lastRun ? '📅 ' + lastRun + ' IST' : '🟢 Data Loaded';
             fileInfo.style.background = 'rgba(5,150,105,0.2)';
             fileInfo.style.borderColor = 'rgba(5,150,105,0.5)';
-        }
-        // Show last run in separate badge
-        const lrBadge = document.getElementById('lastRunBadge');
-        if (lrBadge && lastRun) {
-            lrBadge.textContent = '📅 ' + lastRun;
-            lrBadge.style.display = 'block';
         }
 
     } catch(err) {
@@ -1113,10 +1106,13 @@ function populateDates(){
             dates.map(d=>`<option value="${d}"${d===selectedDate?' selected':''}>${d}</option>`).join('');
         els.dateSelect.value = selectedDate;
     }
-    // Show Last Signal Date in global bar
+    // Show Last Signal Date in global bar — use ALL rows (including fresh/invalid calls)
     const lastSigEl = document.getElementById('globalLastSignal');
-    if(lastSigEl && dates.length){
-        lastSigEl.textContent = '📅 Last Signal: ' + dates[0];
+    if(lastSigEl) {
+        const allDateSet = new Set();
+        for(const r of allRows) { const d = predDateKey(r); if(d) allDateSet.add(d); }
+        const allSorted = Array.from(allDateSet).sort((a,b) => new Date(b+'T00:00:00') - new Date(a+'T00:00:00'));
+        lastSigEl.textContent = allSorted.length ? '📅 Last Signal: ' + allSorted[0] : (dates.length ? '📅 Last Signal: ' + dates[0] : '');
     }
     // On initial load, All Dates is default — enable range inputs
     const fromEl=document.getElementById('fromDate');
@@ -4865,7 +4861,7 @@ function foBadge(sym) {
                     </div>`;
             });
             const updEl = document.getElementById('idxUpdated');
-            if (updEl && data.updated_at) updEl.textContent = '🕐 ' + data.updated_at;
+            // idxUpdated removed (timestamp shown in header badge)
         })
         .catch(() => {
             ['idxNifty50','idxBankNifty','idxSensex','idxNiftyIT'].forEach(id => {
