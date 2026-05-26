@@ -693,6 +693,7 @@ async function autoLoadFromGitHubPages() {
                     const dStr = d.toLocaleDateString('en-GB', {timeZone:'Asia/Kolkata', day:'2-digit', month:'short', year:'numeric'}).replace(/ /g, '-');
                     const tStr = d.toLocaleTimeString('en-US', {timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', hour12:true}).toUpperCase();
                     g_lastRun = dStr + ' ' + tStr + ' IST';  // full datetime for header
+                    g_dataDate = d.toLocaleDateString('en-CA', {timeZone:'Asia/Kolkata'});  // bhavcopy date YYYY-MM-DD
                     _updateHeaderBadge();
                 }
             }
@@ -1123,8 +1124,10 @@ function populateDates(){
         const allDateSet = new Set();
         for(const r of allRows) { const d = predDateKey(r); if(d) allDateSet.add(d); }
         const allSorted = Array.from(allDateSet).sort((a,b) => new Date(b+'T00:00:00') - new Date(a+'T00:00:00'));
-        g_dataDate = allSorted.length ? allSorted[0] : (dates.length ? dates[0] : '');
-        lastSigEl.textContent = g_dataDate ? 'Last Signal: ' + g_dataDate : '';
+        const lastSignalDate = allSorted.length ? allSorted[0] : (dates.length ? dates[0] : '');
+        lastSigEl.textContent = lastSignalDate ? 'Last Signal: ' + lastSignalDate : '';
+        // g_dataDate = bhavcopy date from meta.json; fallback to last signal date if meta load failed
+        if(!g_dataDate && lastSignalDate) g_dataDate = lastSignalDate;
         _updateHeaderBadge();
     }
     // On initial load, All Dates is default — enable range inputs
