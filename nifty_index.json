@@ -1,53 +1,53 @@
 {
-  "updated_at": "06-Aug-2026 06:43 PM IST",
+  "updated_at": "07-Aug-2026 05:43 PM IST",
   "indices": [
     {
       "label": "NIFTY 50",
       "ticker": "^NSEI",
-      "close": 24636.0,
-      "prev_close": 24624.65,
-      "open": 24641.0,
-      "high": 24677.05,
-      "low": 24604.15,
-      "change": 11.35,
-      "change_pct": 0.05,
-      "date": "06-Aug-2026"
+      "close": 24570.65,
+      "prev_close": 24636.0,
+      "open": 24538.9,
+      "high": 24630.4,
+      "low": 24522.75,
+      "change": -65.35,
+      "change_pct": -0.27,
+      "date": "07-Aug-2026"
     },
     {
       "label": "BANKNIFTY",
       "ticker": "^NSEBANK",
-      "close": 58063.65,
-      "prev_close": 57739.95,
-      "open": 57815.0,
-      "high": 58076.85,
-      "low": 57714.7,
-      "change": 323.7,
-      "change_pct": 0.56,
-      "date": "06-Aug-2026"
+      "close": 57746.45,
+      "prev_close": 58063.65,
+      "open": 57882.0,
+      "high": 57994.45,
+      "low": 57686.55,
+      "change": -317.2,
+      "change_pct": -0.55,
+      "date": "07-Aug-2026"
     },
     {
       "label": "SENSEX",
       "ticker": "^BSESN",
-      "close": 78954.76,
-      "prev_close": 78581.0,
-      "open": 78782.43,
-      "high": 78954.76,
-      "low": 78633.73,
-      "change": 373.76,
-      "change_pct": 0.48,
-      "date": "06-Aug-2026"
+      "close": 78499.17,
+      "prev_close": 78954.76,
+      "open": 78516.08,
+      "high": 78757.4,
+      "low": 78377.07,
+      "change": -455.59,
+      "change_pct": -0.58,
+      "date": "07-Aug-2026"
     },
     {
       "label": "NIFTY IT",
       "ticker": "^CNXIT",
-      "close": 31106.2,
-      "prev_close": 31404.05,
-      "open": 31467.9,
-      "high": 31701.9,
-      "low": 31090.2,
-      "change": -297.85,
-      "change_pct": -0.95,
-      "date": "06-Aug-2026"
+      "close": 31547.7,
+      "prev_close": 31106.25,
+      "open": 31067.05,
+      "high": 31799.15,
+      "low": 31047.45,
+      "change": 441.45,
+      "change_pct": 1.42,
+      "date": "07-Aug-2026"
     }
   ]
 }
